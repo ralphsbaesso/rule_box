@@ -34,9 +34,9 @@ Nesta classe deve herdar da class Strategy e sobrescrecer seu método *process*.
 Dentro deste método vai sua lógica de regra de negócio.
 
 ```ruby
-require 'strategy'
+require 'rule_box/strategy'
 
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     # qualquer lógica aqui
   end
@@ -52,9 +52,9 @@ strategy.add_error # Adiciona uma mensagem de erro
 
 refatorando o arquivo *check_name.rb*.
 ```ruby
-require 'strategy'
+require 'rule_box/strategy'
 
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     user = model
     if user.name.nil?
@@ -74,7 +74,7 @@ require 'rule_box/mapper'
 require_relative 'validate_name'
 
 class User
-  include RFacade::Mapper
+  include RuleBox::Mapper
   attr_accessor :name
 
   # lista de regras de negócio
@@ -85,22 +85,24 @@ end
 
 #### 3. Chamar RFacade
 ```ruby
+require 'rule_box/facade'
+
 user = User.new
-facade = RFacade.new
+facade = Rulebox::Facade.new
 facade.insert user
 puts facade.status # :red
 puts facade.errors # ["Nome não pode ficar em branco."]
 
 user = User.new
 user.name = 'Lia'
-facade = RFacade.new
+facade =  Rulebox::Facade.new
 facade.insert user
 puts facade.status # :red
 puts facade.errors  # ["Nome deve conter pelo menos 4 caracteres"]
 
 user = User.new
 user.name = 'Alex'
-facade = RFacade.new
+facade =  Rulebox::Facade.new
 facade.insert user
 puts facade.status # :green
 puts facade.errors # []
@@ -110,7 +112,7 @@ puts facade.errors # []
 #### Aplicando multiplos regras de negócio
 
 ```ruby
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     user = model
 
@@ -124,7 +126,7 @@ class CheckName < Strategy
   end
 end
 
-class CheckAge < Strategy
+class CheckAge < RuleBox::Strategy
   def process
     user = model
 
@@ -138,7 +140,7 @@ class CheckAge < Strategy
   end
 end
 
-class SaveModel < Strategy
+class SaveModel < RuleBox::Strategy
   def process
     if status == :green
       # DAO.persist_model(model)
@@ -148,7 +150,7 @@ end
 
 # Classe com multiplas regras de negócio
 class User
-  include RFacade::Mapper
+  include RuleBox::Mapper
   attr_accessor :name, :age
 
   rules_of_insert Rules::CheckName, Rules::CheckAge, Rules::SaveModel
@@ -167,7 +169,7 @@ user = User.new
 user.name = 'Beltrano'
 user.age = 19
 
-facade = RFacade.new
+facade = RuleBox::Facade.new
 facade.show_steps = true
 facade.insert user
 

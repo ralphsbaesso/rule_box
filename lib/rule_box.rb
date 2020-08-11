@@ -2,6 +2,12 @@
 
 require 'time'
 require 'json'
+
+module RuleBox
+  class Error < StandardError; end
+  # Your code goes here...
+end
+
 require 'rule_box/facade'
 require 'rule_box/getter'
 require 'rule_box/hash'
@@ -10,8 +16,3 @@ require 'rule_box/proxy'
 require 'rule_box/strategy'
 require 'rule_box/util'
 require 'rule_box/version'
-
-module RuleBox
-  class Error < StandardError; end
-  # Your code goes here...
-end

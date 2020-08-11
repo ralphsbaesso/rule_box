@@ -47,9 +47,9 @@ Then, inside this method, it goes your business rule logic.
 
 
 ```ruby
-require 'strategy'
+require 'rulebox/strategy'
 
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     # your code here
   end
@@ -67,9 +67,9 @@ strategy.add_error # adds an error message
 So, your file *check_name.rb* should look like this:
 
 ```ruby
-require 'strategy'
+require 'rulebox/strategy'
 
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     user = model
     if user.name.nil?
@@ -101,22 +101,24 @@ end
 #### 3. Call RFacade
 
 ```ruby
+require 'rule_box/facade'
+
 user = User.new
-facade = RFacade.new
+facade = RuleBox::Facade.new
 facade.insert user
 puts facade.status # :red
 puts facade.errors # ["Name cannot be empty."]
 
 user = User.new
 user.name = 'Lia'
-facade = RFacade.new
+facade = RuleBox::Facade.new
 facade.insert user
 puts facade.status # :red
 puts facade.errors  # ["Name must contain at least 4 characters"]
 
 user = User.new
 user.name = 'Alex'
-facade = RFacade.new
+facade = RuleBox::Facade.new
 facade.insert user
 puts facade.status # :green
 puts facade.errors # []
@@ -126,7 +128,7 @@ puts facade.errors # []
 #### Applying multiple business rules
 
 ```ruby
-class CheckName < Strategy
+class CheckName < RuleBox::Strategy
   def process
     user = model
 
@@ -140,7 +142,7 @@ class CheckName < Strategy
   end
 end
 
-class CheckAge < Strategy
+class CheckAge < RuleBox::Strategy
   def process
     user = model
 
@@ -154,7 +156,7 @@ class CheckAge < Strategy
   end
 end
 
-class SaveModel < Strategy
+class SaveModel < RuleBox::Strategy
   def process
     if status == :green
       # DAO.persist_model(model)
@@ -165,7 +167,7 @@ end
 # Class example with multiple business rules
 class User
   include RFacade::Mapper
-  attr_accessor :name, :age, :throws_error
+  attr_accessor :name, :age
 
   rules_of_insert Rules::CheckName, Rules::CheckAge, Rules::SaveModel
 
@@ -180,10 +182,10 @@ Once in development mode, it can display the steps that took place in Facade.
 
 ```ruby
 user = User.new
-user.name = 'Ralph'
+user.name = 'John Wick'
 user.age = 19
 
-facade = RFacade.new
+facade = RuleBox::Facade.new
 facade.show_steps = true
 facade.insert user
 
