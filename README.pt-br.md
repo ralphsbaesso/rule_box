@@ -1,56 +1,70 @@
 # RuleBox
 
-Gerenciador de regra de negócios
-Gem construida baseando-se nos padrões de projetos (Design Pattern):
-* Facade - Tem escopo **estrutural**. Abstraí a complexidade da chamada das regras de negócio.
-* Strategy - tem escopo **comportamento**. Organiza as regras de negócio em classes.
+Esta gem tem como objetivo fornecer uma maneira forte e concreta de gerenciar suas regras de negócios, combinando o melhor dos dois mundos em Facade e Strategy, trazendo a você uma maneira simplificada de aplicar esses _Design Patterns_ em seu projeto.
 
-## Installation
+#### O que é Facade?
 
-Add this line to your application's Gemfile:
+Facade nada mais é do que um objeto que funciona como uma interface frontal, abstraindo código estrutural ou subjacente mais complexo.
+Benefícios:
+
+  - Melhora a sua legibilidade e usabilidade.
+  - Ele fornece uma interface específica de contexto para uma funcionalidade mais genérica.
+  - Ele oculta as complexidades do sistema maior e fornece uma interface mais simples para o cliente.
+
+#### O que é Strategy?
+
+Strategy é um padrão de design comportamental que permite definir uma família de algoritmos, colocar cada um deles em uma classe separada e tornar seus objetos reutilizáveis.
+
+Em vez de o objeto ter todas as regras de negócio dentro do model, elas serão alocadas em classes separadas, que serão consideradas agora como _strategies_. Essas classes também podem ser usadas dentro de outros objetos.
+
+## Instalação
+
+Adicione esta linha ao Gemfile do seu aplicativo:
 
 ```ruby
 gem 'rule_box'
 ```
 
-And then execute:
+Então execute:
 
     $ bundle install
 
-Or install it yourself as:
+Ou instale você mesmo:
 
     $ gem install rule_box
 
-## Usage
+## Utilização
 
-Para utilizar regras de negócio no seu **Model** com RFacade ele deve ter uma lista de regra de négocio.
+Para começar a usar regras de negócios dentro de seu **model** com RuleBox, eles devem possuir uma lista de regras de negócios.
 
 #### 1. Criando regra de negócio (Strategy).
 
-Por exemplo, crie um arquivo *check_name.rb*.
+Crie um arquivo chamado *check_name.rb*.
 
-Nesta classe deve herdar da class Strategy e sobrescrecer seu método *process*.
+Nesta classe, ele deve herdar da classe Strategy e substituir seu método *process*.
 
-Dentro deste método vai sua lógica de regra de negócio.
+Então, dentro desse método, insira sua lógica de regra de negócios.
 
 ```ruby
 require 'rule_box/strategy'
 
 class CheckName < RuleBox::Strategy
   def process
-    # qualquer lógica aqui
+    # sua lógica aqui
   end
 end
 ```
 
-Na classe *Strategy* existe alguns *helpers* para auxiliar-lhe.
+Existem alguns *helpers* na classe *Strategy* que irão ajudá-lo.
+
 ```ruby
-strategy.model # retorna o "Model"
-strategy.set_status # seta o semáfora: [:red, :yellow, :green]
+strategy.model # Retorna o "Model"
+strategy.set_status # Seta o valor semáforo: [:red, :yellow, :green] 
 strategy.add_error # Adiciona uma mensagem de erro
 ```
 
-refatorando o arquivo *check_name.rb*.
+Então, seu arquivo *check_name.rb* deverá ficar assim:
+
 ```ruby
 require 'rule_box/strategy'
 
@@ -58,7 +72,7 @@ class CheckName < RuleBox::Strategy
   def process
     user = model
     if user.name.nil?
-      add_error 'Nome não pode ficar em branco.'
+      add_error 'Nome não pode ficar em branco'
       set_status :red
     elsif user.name.size < 4
       add_error 'Nome deve conter pelo menos 4 caracteres'
@@ -83,7 +97,7 @@ class User
 end
 ```
 
-#### 3. Chamar RFacade
+#### 3. Chamar RuleBox
 ```ruby
 require 'rule_box/facade'
 
@@ -91,10 +105,10 @@ user = User.new
 facade = Rulebox::Facade.new
 facade.insert user
 puts facade.status # :red
-puts facade.errors # ["Nome não pode ficar em branco."]
+puts facade.errors # ["Nome não pode ficar em branco"]
 
 user = User.new
-user.name = 'Lia'
+user.name = 'Ana'
 facade =  Rulebox::Facade.new
 facade.insert user
 puts facade.status # :red
@@ -117,7 +131,7 @@ class CheckName < RuleBox::Strategy
     user = model
 
     if user.name.nil?
-      add_error 'Nome não pode ficar em branco.'
+      add_error 'Nome não pode ficar em branco'
       set_status :red
     elsif user.name.size < 4
       add_error 'Nome deve conter pelo menos 4 caracteres'
@@ -131,10 +145,10 @@ class CheckAge < RuleBox::Strategy
     user = model
 
     if !user.age.is_a? Integer
-      add_error '"age must be an Integer"'
+      add_error 'Idade precisa ser um número inteiro'
       set_status :red
     elsif user.age < 18
-      add_error 'must be over 18 years old'
+      add_error 'Deve ser maior que 18'
       set_status :red
     end
   end
@@ -148,7 +162,7 @@ class SaveModel < RuleBox::Strategy
   end
 end
 
-# Classe com multiplas regras de negócio
+# Exemplo de classe com múltiplas regras de negócio
 class User
   include RuleBox::Mapper
   attr_accessor :name, :age
@@ -160,13 +174,13 @@ end
 ```
 
  
-## Development
+## Desenvolvimento
 
-Em desesolvimento pode mostrar os passos (steps) ocorrido no Facade
+Uma vez no modo de desenvolvimento, ele pode exibir as etapas (steps) que ocorreram no Facade.
 
 ```ruby
 user = User.new
-user.name = 'Beltrano'
+user.name = 'Carlos'
 user.age = 19
 
 facade = RuleBox::Facade.new
