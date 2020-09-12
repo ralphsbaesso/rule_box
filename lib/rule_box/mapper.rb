@@ -3,6 +3,11 @@
 module RuleBox::Mapper
   def self.included(klass)
     klass.extend(ClassMethods)
+    mapped << klass
+  end
+
+  def self.mapped
+    @mapped ||= Set.new
   end
 
   module ClassMethods
@@ -28,6 +33,20 @@ module RuleBox::Mapper
 
     def strategies(method)
       current_rules[method]
+    end
+
+    def show_strategies
+      current_rules.map do |method, strategies|
+        {
+          method: method,
+          strategies: strategies.map do |strategy|
+            {
+              name: strategy.name,
+              description: strategy.description
+            }
+          end
+        }
+      end
     end
 
     private

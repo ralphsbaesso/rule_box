@@ -4,6 +4,7 @@ require_relative '../../lib/rule_box/strategy'
 
 module Rules
   class CheckName < RuleBox::Strategy
+    desc 'Verifica nome'
     def process
       user = model
 

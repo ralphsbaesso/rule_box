@@ -124,4 +124,24 @@ RSpec.describe RuleBox do
       end
     end
   end
+
+  context '.show_mapped_classes' do
+    it 'show class using RuleBox::Mapper' do
+      User.include RuleBox::Mapper
+      Book.include RuleBox::Mapper
+
+      classes = RuleBox.show_mapped_classes
+      expect(classes).to include(User)
+      expect(classes).to include(Book)
+    end
+  end
+
+  context '.show_strategies' do
+    it 'Show all strategy by class' do
+      strategies = User.show_strategies
+      expect(strategies.count).to eq(2)
+      strategy_insert = strategies.find { |strategy| strategy[:method] == :insert }
+      expect(strategy_insert[:strategies].count).to eq(4)
+    end
+  end
 end
