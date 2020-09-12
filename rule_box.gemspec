@@ -5,8 +5,8 @@ require_relative 'lib/rule_box/version'
 Gem::Specification.new do |spec|
   spec.name          = 'rule_box'
   spec.version       = RuleBox::VERSION
-  spec.authors       = ['ralph']
-  spec.email         = ['ralph.baesso@bkps.com.br']
+  spec.authors       = ['Ralph Baesso', 'Nathan Meira']
+  spec.email         = ['ralph.baesso@bkps.com.br', 'nathanmeira1@gmail.com']
 
   spec.summary       = 'RuleBox'
   spec.description   = 'Gerenciamento de fluxo de regra de negócio.'

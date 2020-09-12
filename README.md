@@ -1,6 +1,6 @@
 # 🧰 RuleBox 
 
-This gem mixes the best of both worlds in Facade and Strategy, bringing you a simplified way to apply these _Design Patterns_ into your project.
+This gem is focused in giving a strong and concrete way to manage your business rules, mixing the best of both worlds in Facade and Strategy, bringing you a simplified way to apply these _Design Patterns_ into your project.
 
 #### What is Facade?
 
@@ -35,7 +35,7 @@ Or install it yourself as:
 
 ## Usage
 
-To get started using business rules inside your **model** eith RFacade, they must have a business rules list.
+To get started using business rules inside your **model** with RuleBox, they must have a business rules list.
 
 #### 1. Creating the business rules (Strategy).
 
@@ -89,7 +89,7 @@ require 'rule_box/mapper'
 require_relative 'validate_name'
 
 class User
-  include RFacade::Mapper
+  include RuleBox::Mapper
   attr_accessor :name
 
   # list of business rules
@@ -98,7 +98,7 @@ class User
 end
 ```
 
-#### 3. Call RFacade
+#### 3. Call RuleBox
 
 ```ruby
 require 'rule_box/facade'
@@ -110,7 +110,7 @@ puts facade.status # :red
 puts facade.errors # ["Name cannot be empty."]
 
 user = User.new
-user.name = 'Lia'
+user.name = 'Bob'
 facade = RuleBox::Facade.new
 facade.insert user
 puts facade.status # :red
@@ -166,7 +166,7 @@ end
 
 # Class example with multiple business rules
 class User
-  include RFacade::Mapper
+  include RuleBox::Mapper
   attr_accessor :name, :age
 
   rules_of_insert Rules::CheckName, Rules::CheckAge, Rules::SaveModel
