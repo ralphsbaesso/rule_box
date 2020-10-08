@@ -36,6 +36,10 @@ module RuleBox::Getter
     @facade.steps.clone
   end
 
+  def _current_method
+    @facade._current_method
+  end
+
   def executed
     @facade.executed
   end

@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['ralphsbaesso@gmail.com', 'nathanmeira1@gmail.com']
 
   spec.summary       = 'RuleBox'
-  spec.description   = 'Gerenciamento de fluxo de regra de negócio.'
+  spec.description   = 'This gem is focused in giving a strong and concrete way to manage your business rules, mixing the best of both worlds in Facade and Strategy, bringing you a simplified way to apply these Design Patterns into your project.'
   spec.homepage      = 'https://github.com/ralphsbaesso'
   spec.license       = 'MIT'
   spec.required_ruby_version = Gem::Requirement.new('>= 2.3.0')

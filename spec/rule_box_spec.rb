@@ -85,6 +85,17 @@ RSpec.describe RuleBox do
         expect(errors.first).to eq('any thing')
       end
 
+      it 'show current method' do
+        user = User.new
+        user.name = 'name'
+        user.age = 20
+
+        facade = RuleBox::Facade.new
+        expect(facade._current_method).to be_nil
+        facade.insert user
+        expect(facade._current_method).to eq(:insert)
+      end
+
       context 'with dynamic rules' do
         it 'must check one error' do
           user = User.new

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class RuleBox::Facade
-  attr_reader :model, :status, :data, :bucket, :errors, :steps, :executed
+  attr_reader :model, :status, :data, :bucket, :errors, :steps, :executed, :_current_method
   attr_accessor :show_steps
 
   def initialize(**dependencies)
@@ -44,7 +44,7 @@ class RuleBox::Facade
 
   def attributes
     attrs = {}
-    %i[model status data bucket executed errors steps].each do |key|
+    %i[model status data bucket executed errors steps _current_method].each do |key|
       value = send key
       attrs[key] = value
     end
@@ -92,6 +92,7 @@ class RuleBox::Facade
 
   def pre_process(method, model)
     @model = model
+    @_current_method = method
     class_name = check_class_model
     @errors = []
     @steps = []
