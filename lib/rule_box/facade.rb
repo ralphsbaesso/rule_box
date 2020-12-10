@@ -42,6 +42,19 @@ class RuleBox::Facade
     execute(:delete, model, args)
   end
 
+  def _current_class
+    @_current_class ||=
+      if model.nil?
+        nil
+      elsif model.is_a?(Class) || model.is_a?(Module)
+        model
+      elsif model.is_a?(Symbol) || model.is_a?(String)
+        Object.const_get RuleBox::Util.camelize(model.to_s)
+      else
+        Object.const_get model.class.name
+      end
+  end
+
   def attributes
     attrs = {}
     %i[model status data bucket executed errors steps _current_method].each do |key|
@@ -77,7 +90,7 @@ class RuleBox::Facade
   def respond_to_missing?(method, _include_private = false)
     return false if @executed || method.to_s.end_with?('=')
 
-    true
+    super
   end
 
   def execute(method, model, **args)
@@ -93,7 +106,7 @@ class RuleBox::Facade
   def pre_process(method, model)
     @model = model
     @_current_method = method
-    class_name = check_class_model
+    class_name = _current_class
     @errors = []
     @steps = []
 
@@ -135,14 +148,12 @@ class RuleBox::Facade
     steps << new_value
   end
 
-  def check_class_model
-    if model.is_a?(Class) || model.is_a?(Module)
-      model
-    elsif model.is_a?(Symbol) || model.is_a?(String)
-      Object.const_get RuleBox::Util.camelize(model.to_s)
-    else
-      Object.const_get model.class.name
-    end
+  def marshal_dump
+    instance_variables.map { |name| [name, instance_variable_get(name)] }.to_h
+  end
+
+  def marshal_load(variables)
+    variables.each { |key, value| instance_variable_set(key, value) }
   end
 
   def keys

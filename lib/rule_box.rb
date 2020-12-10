@@ -7,12 +7,10 @@ module RuleBox
   class Error < StandardError; end
 
   class << self
-
     def show_mapped_classes
       RuleBox::Mapper.mapped.to_a
     end
   end
-
 end
 
 require 'rule_box/facade'

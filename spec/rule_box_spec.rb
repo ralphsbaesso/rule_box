@@ -155,4 +155,34 @@ RSpec.describe RuleBox do
       expect(strategy_insert[:strategies].count).to eq(4)
     end
   end
+
+  context RuleBox::Facade do
+    context '_current_class' do
+      it 'must retorn class of instance' do
+        User.include RuleBox::Mapper
+
+        user = User.new
+        user.name = 'Sicrano'
+        user.age = 44
+
+        facade = RuleBox::Facade.new
+        expect(facade._current_class).to eq(nil)
+
+        facade.insert user
+        expect(facade._current_class).to eq(User)
+      end
+    end
+
+    context 'working with Marshal' do
+      it 'serialize and deserialize' do
+        facade = RuleBox::Facade.new
+        string = Marshal.dump(facade)
+        expect(string).to be_an(String)
+
+        obj = Marshal.load(string)
+        expect(obj).to be_an(RuleBox::Facade)
+        expect(obj.attributes).to eq(facade.attributes)
+      end
+    end
+  end
 end
