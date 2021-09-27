@@ -93,13 +93,13 @@ class RuleBox::Facade
     super
   end
 
-  def execute(method, model, **args)
+  def execute(method, model, args = {})
     raise 'Process already executed' if @executed
 
     @executed = true
     @status = :green
     @bucket = RuleBox::Hash.new
-    args.each { |key, value| bucket[key] = value }
+    args.each { |key, value| bucket[key] = value } if args.is_a? Hash
     pre_process(method, model)
   end
 
