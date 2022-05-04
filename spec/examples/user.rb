@@ -9,9 +9,9 @@ class User
 
   rules_of :insert,
            Rules::CheckName,
-                  Rules::CheckAge,
-                  Rules::ThrowsError,
-                  Rules::SaveModel
+           Rules::CheckAge,
+           Rules::ThrowsError,
+           Rules::SaveModel
 
   rules_of :check, Rules::CheckName
 end

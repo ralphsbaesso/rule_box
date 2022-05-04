@@ -9,5 +9,5 @@ class Book
 
   rules_of :insert,
            Rules::CheckOwner,
-                  Rules::CheckName
+           Rules::CheckName
 end
