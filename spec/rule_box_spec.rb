@@ -69,7 +69,7 @@ RSpec.describe RuleBox do
         user.age = 19
 
         facade = RuleBox::Facade.new
-        facade.insert user
+        facade.exec :insert, user
         expect(facade.status).to eq(:green)
       end
 
@@ -80,7 +80,7 @@ RSpec.describe RuleBox do
         user.throws_error = true
 
         facade = RuleBox::Facade.new
-        facade.insert user
+        facade.exec :insert, user
         expect(errors.count).to eq(1)
         expect(errors.first).to eq('any thing')
       end
@@ -91,9 +91,9 @@ RSpec.describe RuleBox do
         user.age = 20
 
         facade = RuleBox::Facade.new
-        expect(facade._current_method).to be_nil
-        facade.insert user
-        expect(facade._current_method).to eq(:insert)
+        expect(facade.current_method).to be_nil
+        facade.exec :insert, user
+        expect(facade.current_method).to eq(:insert)
       end
 
       context 'with dynamic rules' do
@@ -103,7 +103,7 @@ RSpec.describe RuleBox do
           user.age = 19
 
           facade = RuleBox::Facade.new
-          facade.check user
+          facade.exec :check, user
           expect(facade.errors.count).to eq(1)
           expect(facade.errors.first).to eq('Nome deve conter pelo menos 4 caracteres')
         end
@@ -127,7 +127,7 @@ RSpec.describe RuleBox do
         user = User.new
         book = Book.new
         facade = RuleBox::Facade.new(user: user)
-        facade.insert book
+        facade.exec :insert, book
 
         expect(facade.status).to eq(:red)
         expect(facade.errors.first).to eq('is not Leo')
@@ -157,22 +157,6 @@ RSpec.describe RuleBox do
   end
 
   context RuleBox::Facade do
-    context '_current_class' do
-      it 'must retorn class of instance' do
-        User.include RuleBox::Mapper
-
-        user = User.new
-        user.name = 'Sicrano'
-        user.age = 44
-
-        facade = RuleBox::Facade.new
-        expect(facade._current_class).to eq(nil)
-
-        facade.insert user
-        expect(facade._current_class).to eq(User)
-      end
-    end
-
     context 'working with Marshal' do
       it 'serialize and deserialize' do
         facade = RuleBox::Facade.new

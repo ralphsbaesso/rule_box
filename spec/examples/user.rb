@@ -7,7 +7,8 @@ class User
   include RuleBox::Mapper
   attr_accessor :name, :age, :throws_error
 
-  rules_of_insert Rules::CheckName,
+  rules_of :insert,
+           Rules::CheckName,
                   Rules::CheckAge,
                   Rules::ThrowsError,
                   Rules::SaveModel

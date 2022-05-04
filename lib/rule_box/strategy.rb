@@ -1,38 +1,26 @@
 # frozen_string_literal: true
 
 class RuleBox::Strategy
-  include RuleBox::Getter
+  DELEGATES = %i[add_error current_method bucket errors executed get model set_status status steps].freeze
+  DELEGATES.each do |method|
+    define_method method do |*rest, **restkey|
+      @facade.send method, *rest, **restkey
+    end
+  end
+
+  def initialize(facade:, last_result: nil)
+    @facade = facade
+    @last_result = last_result
+  end
 
   def process
     raise 'Must implement this method'
   end
 
-  def set_status(status)
-    @facade.instance_variable_set :@status, status
-  end
+  private
 
-  def add_error(msg)
-    if msg.is_a? Array
-      @facade.errors.concat(msg)
-    else
-      @facade.errors << msg
-    end
-  end
-
-  def model
-    @facade.model
-  end
-
-  def data
-    @facade.data
-  end
-
-  def data=(data)
-    @facade.instance_variable_set :@data, data
-  end
-
-  def bucket
-    @facade.bucket
+  def last_result
+    @last_result
   end
 
   class << self

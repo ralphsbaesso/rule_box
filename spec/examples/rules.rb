@@ -50,7 +50,8 @@ module Rules
   class CheckOwner < RuleBox::Strategy
     desc 'Isso é uma descrição'
     def process
-      unless current_user.name == 'Leo'
+      name = get :name
+      unless name == 'Leo'
         add_error 'is not Leo'
         set_status :red
       end

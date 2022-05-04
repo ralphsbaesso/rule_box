@@ -1,10 +1,51 @@
 # frozen_string_literal: true
 
 class RuleBox::Facade
-  attr_reader :model, :status, :data, :bucket, :errors, :steps, :executed, :_current_method
-  attr_accessor :show_steps
+  attr_reader :model, :status, :bucket, :executed, :current_method
 
   def initialize(**dependencies)
+    set_dependencies dependencies
+    @executed = false
+  end
+
+  def errors
+    @current_errors.clone
+  end
+
+  def exec(method = :perform, model, **args)
+    perform method, model, **args
+  end
+
+  def get(key)
+    keys[key.to_s].clone
+  end
+
+  def attributes
+    %i[model status bucket executed errors steps current_method].map do |key|
+      value = send key
+      [key, value]
+    end.to_h
+  end
+
+  def to_json(**args)
+    JSON.generate(as_json(args), args)
+  end
+
+  def as_json(**options)
+    options.key?(:root) ? { self.class.name.to_sym => attributes } : attributes
+  end
+
+  def to_s
+    as_json(root: true).to_s
+  end
+
+  def steps
+    @steps.clone
+  end
+
+  private
+
+  def set_dependencies(dependencies)
     errors = []
     settings.dependencies.each do |key, block|
       begin
@@ -21,143 +62,96 @@ class RuleBox::Facade
 
     raise errors.join("\n") unless errors.empty?
 
-    dependencies.each { |key, value| keys["current_#{key}".to_sym] = value }
-    @executed = false
-    @show_steps = settings.show_steps
+    dependencies.each { |key, value| set key, value }
   end
 
-  def insert(model, **args)
-    execute(:insert, model, args)
-  end
-
-  def select(model, **args)
-    execute(:select, model, args)
-  end
-
-  def update(model, **args)
-    execute(:update, model, args)
-  end
-
-  def delete(model, **args)
-    execute(:delete, model, args)
-  end
-
-  def _current_class
-    @_current_class ||=
-      if model.nil?
-        nil
-      elsif model.is_a?(Class) || model.is_a?(Module)
-        model
-      elsif model.is_a?(Symbol) || model.is_a?(String)
-        Object.const_get RuleBox::Util.camelize(model.to_s)
-      else
-        Object.const_get model.class.name
-      end
-  end
-
-  def attributes
-    attrs = {}
-    %i[model status data bucket executed errors steps _current_method].each do |key|
-      value = send key
-      attrs[key] = value
-    end
-    attrs
-  end
-
-  def to_json(**args)
-    JSON.generate(as_json(args), args)
-  end
-
-  def as_json(**options)
-    options.key?(:root) ? { self.class.name.to_sym => attributes } : attributes
-  end
-
-  def to_s
-    as_json(root: true).to_s
-  end
-
-  private
-
-  def method_missing(method, *parameters)
-    super if parameters.empty?
-    super if method.to_s.end_with? '='
-
-    model = parameters[0]
-    args = parameters[1] || {}
-    execute(method, model, args)
-  end
-
-  def respond_to_missing?(method, _include_private = false)
-    return false if @executed || method.to_s.end_with?('=')
-
-    super
-  end
-
-  def execute(method, model, args = {})
+  def perform(method, model, **args)
     raise 'Process already executed' if @executed
 
+    initialize_variables!(method, model, args)
+    class_strategies = load_class_strategies(method, model)
+    raise "class [#{model.class}] without mapped rules to [#{method}]'" unless class_strategies
+    execute_strategies(class_strategies)
+  end
+
+  def initialize_variables!(method, model, args)
     @executed = true
-    @status = :green
-    @bucket = RuleBox::Hash.new
-    args.each { |key, value| bucket[key] = value } if args.is_a? Hash
-    pre_process(method, model)
-  end
-
-  def pre_process(method, model)
     @model = model
-    @_current_method = method
-    class_name = _current_class
-    @errors = []
+    @current_method = method
+    @status = start_status
+    @bucket = build_build_bucket
     @steps = []
-
-    add_step "{ method: #{method}, model: #{class_name}, args: #{bucket} }"
-    strategies = class_name.strategies(method)&.map { |strategy| strategy.new(self) }
-    unless strategies
-      raise "class [#{class_name}] without mapped rules to [#{method}]'"
-    end
-
-    process(strategies)
+    @current_errors = []
+    args.each { |key, value| bucket[key] = value }
   end
 
-  def process(strategies)
-    add_step "amount of rules #{strategies.count}"
+  def build_build_bucket
+    {}
+  end
 
-    strategies.each do |strategy|
-      add_step "executing of rule: #{strategy.class.name}."
-      strategy.process
+  def start_status
+    :green
+  end
 
-      break if status == :red
+  def load_class_strategies(method, model)
+    model.class.strategies(method)
+  end
+
+  def execute_strategies(class_strategies)
+    add_step "amount of rules #{class_strategies.count}"
+    last_result = nil
+
+    class_strategies.each do |class_strategy|
+      execute_strategy(class_strategy, last_result)
+      break if status == failure_status
     end
   rescue Exception => e
-    errors << settings.default_error_message
-    @status = :red
+    @current_errors << settings.default_error_message
+    @status = failure_status
     block = settings.resolve
-    block.call(e, RuleBox::Proxy.new(self)) if block.is_a? Proc
+    block.call(e, self.clone) if block.is_a? Proc
   ensure
     add_step 'finalized the process on the facade.'
-    return self
+    return last_result
+  end
+
+  def execute_strategy(class_strategy, last_result)
+    strategy = class_strategy.new(facade: self, last_result: last_result)
+    add_step "executing of rule: #{strategy.class.name}."
+    strategy.process
+  end
+
+  def failure_status
+    :red
   end
 
   def settings
     RuleBox::Facade.settings
   end
 
+  def add_error(msg)
+    if msg.is_a? Array
+      @current_errors.concat(msg)
+    else
+      @current_errors << msg
+    end
+  end
+
   def add_step(value)
     new_value = "[#{DateTime.now.strftime('%FT%T.%L%:z')}] #{value}"
-    puts new_value if show_steps || settings.show_steps
     steps << new_value
-  end
-
-  def marshal_dump
-    instance_variables.map { |name| [name, instance_variable_get(name)] }.to_h
-  end
-
-  def marshal_load(variables)
-    variables.each { |key, value| instance_variable_set(key, value) }
   end
 
   def keys
     @keys ||= {}
+  end
+
+  def set(key, value)
+    keys[key.to_s] = value
+  end
+
+  def set_status(status)
+    @status = status
   end
 
   # class Methods
@@ -179,11 +173,9 @@ class RuleBox::Facade
     class Settings
       attr_reader :dependencies, :resolve
       attr_writer :default_error_message
-      attr_accessor :show_steps
 
       def initialize
         @dependencies = {}
-        @show_steps = false
       end
 
       def add_dependency(key, &block)

@@ -11,20 +11,8 @@ module RuleBox::Mapper
   end
 
   module ClassMethods
-    def rules_of_insert(*rules)
-      add_rules :insert, rules
-    end
-
-    def rules_of_update(*rules)
-      add_rules :update, rules
-    end
-
-    def rules_of_delete(*rules)
-      add_rules :delete, rules
-    end
-
-    def rules_of_select(*rules)
-      add_rules :select, rules
+    def rules(*rules)
+      add_rules :perform, rules
     end
 
     def rules_of(method, *rules)
