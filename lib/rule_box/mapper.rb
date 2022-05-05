@@ -24,6 +24,14 @@ module RuleBox
         current_rules[method]
       end
 
+      def customize_result(&block)
+        hooks[:customize_result] = block
+      end
+
+      def hooks
+        @hooks ||= {}
+      end
+
       def show_strategies
         current_rules.map do |method, strategies|
           {

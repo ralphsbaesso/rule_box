@@ -102,7 +102,7 @@ module RuleBox
       last_result = nil
 
       class_strategies.each do |class_strategy|
-        execute_strategy(class_strategy, last_result)
+        last_result = execute_strategy(class_strategy, last_result)
         break if status == failure_status
       end
     rescue Exception => e
@@ -112,13 +112,18 @@ module RuleBox
       block.call(e, clone) if block.is_a? Proc
     ensure
       add_step 'finalized the process on the facade.'
-      return last_result
+      return return_result(last_result)
     end
 
     def execute_strategy(class_strategy, last_result)
       strategy = class_strategy.new(facade: self, last_result: last_result)
       add_step "executing of rule: #{strategy.class.name}."
       strategy.process
+    end
+
+    def return_result(last_result)
+      customize = model.class.hooks[:customize_result]
+      customize.is_a?(Proc) ? customize.call(facade: self, last_result: last_result) : last_result
     end
 
     def failure_status

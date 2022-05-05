@@ -9,7 +9,7 @@ module RuleBox
       end
     end
 
-    def initialize(facade:, last_result: nil)
+    def initialize(facade: nil, last_result: nil)
       @facade = facade
       @last_result = last_result
     end
