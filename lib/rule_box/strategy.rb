@@ -9,18 +9,13 @@ module RuleBox
       end
     end
 
-    def initialize(facade: nil, last_result: nil)
+    def initialize(facade = nil)
       @facade = facade
-      @last_result = last_result
     end
 
     def process
       raise 'Must implement this method'
     end
-
-    private
-
-    attr_reader :last_result
 
     class << self
       attr_reader :description

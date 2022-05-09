@@ -2,15 +2,13 @@
 
 module RuleBox
   class Facade
-    attr_reader :model, :status, :bucket, :executed, :current_method
+    attr_accessor :last_result
+    attr_reader :current_method, :bucket, :executed, :status
 
     def initialize(**dependencies)
       set_dependencies dependencies
+      set_cloned_methods
       @executed = false
-    end
-
-    def errors
-      @current_errors.clone
     end
 
     def exec(method = :perform, model, **args)
@@ -38,10 +36,6 @@ module RuleBox
 
     def to_s
       as_json(root: true).to_s
-    end
-
-    def steps
-      @steps.clone
     end
 
     private
@@ -81,7 +75,7 @@ module RuleBox
       @status = start_status
       @bucket = build_build_bucket
       @steps = []
-      @current_errors = []
+      @errors = []
       args.each { |key, value| bucket[key] = value }
     end
 
@@ -99,31 +93,30 @@ module RuleBox
 
     def execute_strategies(class_strategies)
       add_step "amount of rules #{class_strategies.count}"
-      last_result = nil
 
       class_strategies.each do |class_strategy|
-        last_result = execute_strategy(class_strategy, last_result)
+        self.last_result = execute_strategy(class_strategy)
         break if status == failure_status
       end
     rescue Exception => e
-      @current_errors << settings.default_error_message
+      @errors << settings.default_error_message
       @status = failure_status
       block = settings.resolve
       block.call(e, clone) if block.is_a? Proc
     ensure
       add_step 'finalized the process on the facade.'
-      return return_result(last_result)
+      return return_result
     end
 
-    def execute_strategy(class_strategy, last_result)
-      strategy = class_strategy.new(facade: self, last_result: last_result)
+    def execute_strategy(class_strategy)
+      strategy = class_strategy.new(self)
       add_step "executing of rule: #{strategy.class.name}."
       strategy.process
     end
 
-    def return_result(last_result)
+    def return_result
       customize = model.class.hooks[:customize_result]
-      customize.is_a?(Proc) ? customize.call(facade: self, last_result: last_result) : last_result
+      customize.is_a?(Proc) ? customize.call(self) : last_result
     end
 
     def failure_status
@@ -136,9 +129,9 @@ module RuleBox
 
     def add_error(msg)
       if msg.is_a? Array
-        @current_errors.concat(msg)
+        @errors.concat(msg)
       else
-        @current_errors << msg
+        @errors << msg
       end
     end
 
@@ -157,6 +150,16 @@ module RuleBox
 
     def set_status(status)
       @status = status
+    end
+
+    def cloned_objects
+      %i[errors model steps]
+    end
+
+    def set_cloned_methods
+      cloned_objects.each do |method|
+        self.class.define_method(method) { instance_variable_get("@#{method}").clone }
+      end
     end
 
     # class Methods

@@ -129,4 +129,30 @@ RSpec.describe RuleBox::Facade do
       end
     end
   end
+
+  context 'instance methods' do
+    context '#clone_objects' do
+      it do
+        facade = RuleBox::Facade.new
+        expected = %i[errors model steps]
+
+        expect(facade.send(:cloned_objects)).to eq(expected)
+      end
+
+      it 'must return cloned object' do
+        errors = ['error']
+        model = { name: :model }
+        steps = [1, 2, 3]
+
+        facade = RuleBox::Facade.new
+        facade.instance_variable_set :@errors, errors
+        facade.instance_variable_set :@model, model
+        facade.instance_variable_set :@steps, steps
+
+        expect(facade.send(:errors)).to_not be(errors)
+        expect(facade.send(:model)).to_not equal(model)
+        expect(facade.send(:steps)).to_not be(steps)
+      end
+    end
+  end
 end
