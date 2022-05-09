@@ -14,6 +14,7 @@ module RuleBox
   end
 end
 
+require 'rule_box/method_helper'
 require 'rule_box/facade'
 require 'rule_box/mapper'
 require 'rule_box/strategy'

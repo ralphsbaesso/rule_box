@@ -2,12 +2,12 @@
 
 module RuleBox
   class Strategy
-    DELEGATES = %i[add_error current_method bucket errors executed get model set_status status steps].freeze
-    DELEGATES.each do |method|
-      define_method method do |*rest, **restkey|
-        @facade.send method, *rest, **restkey
-      end
-    end
+    include RuleBox::MethodHelper
+
+    attr_reader :facade
+
+    delegate_methods :add_error, :current_method, :bucket, :errors, :executed, :get, :set_status, :status, :steps,
+                     to: :facade
 
     def initialize(facade = nil)
       @facade = facade
@@ -15,6 +15,12 @@ module RuleBox
 
     def process
       raise 'Must implement this method'
+    end
+
+    private
+
+    def model
+      @facade.instance_variable_get :@model
     end
 
     class << self

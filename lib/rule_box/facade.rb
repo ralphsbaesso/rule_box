@@ -2,12 +2,15 @@
 
 module RuleBox
   class Facade
+    include RuleBox::MethodHelper
+
     attr_accessor :last_result
     attr_reader :current_method, :bucket, :executed, :status
 
+    attr_clones :errors, :model, :steps
+
     def initialize(**dependencies)
       set_dependencies dependencies
-      set_cloned_methods
       @executed = false
     end
 
@@ -150,16 +153,6 @@ module RuleBox
 
     def set_status(status)
       @status = status
-    end
-
-    def cloned_objects
-      %i[errors model steps]
-    end
-
-    def set_cloned_methods
-      cloned_objects.each do |method|
-        self.class.define_method(method) { instance_variable_get("@#{method}").clone }
-      end
     end
 
     # class Methods
