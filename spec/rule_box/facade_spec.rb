@@ -13,7 +13,7 @@ RSpec.describe RuleBox::Facade do
       end
     end
 
-    after(:all) { RuleBox::Facade.clear_configuration }
+    after(:all) { RuleBox::Facade.clear_configuration! }
 
     it 'must generate one error' do
       expect { RuleBox::Facade.new }.to raise_error(RuntimeError)
@@ -36,7 +36,7 @@ RSpec.describe RuleBox::Facade do
         end
       end
     end
-    after(:all) { RuleBox::Facade.clear_configuration }
+    after(:all) { RuleBox::Facade.clear_configuration! }
 
     it 'with validators add errors' do
       expect { RuleBox::Facade.new(integer: {}, array: 123_456) }.to raise_error('Must pass one Integer')
@@ -45,17 +45,15 @@ RSpec.describe RuleBox::Facade do
 
   context 'add rules to models' do
     context :user do
-      let(:errors) { [] }
-
       before :each do
-        RuleBox::Facade.configure do |config|
-          config.default_error_message = 'Ops, ocorreu um erro!'
-          config.resolver_exception do |error, _facade|
-            errors << error.message
+        RuleBox.configure do |config|
+          config.rescue_from Exception do |facade|
+            facade.add_error 'Ops, ocorreu um erro!'
           end
         end
       end
-      after(:all) { RuleBox::Facade.clear_configuration }
+
+      after(:all) { RuleBox::Facade.clear_configuration! }
 
       it 'validate name of user' do
         user = User.new
@@ -75,8 +73,10 @@ RSpec.describe RuleBox::Facade do
 
         facade = RuleBox::Facade.new
         facade.exec :insert, user
+
+        errors = facade.errors
         expect(errors.count).to eq(1)
-        expect(errors.first).to eq('any thing')
+        expect(errors.first).to eq('Ops, ocorreu um erro!')
       end
 
       it 'show current method' do
@@ -109,13 +109,13 @@ RSpec.describe RuleBox::Facade do
 
       before :each do
         RuleBox::Facade.configure do |config|
-          config.resolver_exception { |error| current_errors << error.message }
+          config.rescue_from(StandardError) { |error| current_errors << error.message }
           config.add_dependency(:user) do |obj|
             raise 'Must be an User' unless obj.is_a?(User)
           end
         end
       end
-      after(:all) { RuleBox::Facade.clear_configuration }
+      after(:all) { RuleBox::Facade.clear_configuration! }
 
       it 'must validate user is "Leo"' do
         user = User.new

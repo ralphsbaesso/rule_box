@@ -2,9 +2,18 @@
 
 module RuleBox
   module Mapper
-    def self.included(klass)
-      klass.extend(ClassMethods)
-      mapped << klass
+    extend RuleBox::ExecutionHook
+
+    if const_defined? 'ActiveSupport::Concern'
+      # to Rails project
+      extend ActiveSupport::Concern
+      included { include RuleBox::ExecutionHook }
+    else
+      def self.included(klass)
+        klass.include RuleBox::ExecutionHook
+        klass.extend ClassMethods
+        mapped << klass
+      end
     end
 
     def self.mapped
@@ -22,14 +31,6 @@ module RuleBox
 
       def strategies(method)
         current_rules[method]
-      end
-
-      def customize_result(&block)
-        hooks[:customize_result] = block
-      end
-
-      def hooks
-        @hooks ||= {}
       end
 
       def show_strategies

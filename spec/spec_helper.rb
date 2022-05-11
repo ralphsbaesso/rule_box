@@ -5,6 +5,7 @@ require 'rule_box'
 
 require_relative 'examples/user'
 require_relative 'examples/book'
+require_relative 'examples/tester'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -15,5 +16,9 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.before do
+    RuleBox.clear_hooks!
   end
 end

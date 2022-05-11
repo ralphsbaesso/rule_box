@@ -47,6 +47,13 @@ module Rules
     end
   end
 
+  class ThrowsStandardError < RuleBox::Strategy
+    def process
+      user = model
+      raise StandardError if user.throws_standard_error
+    end
+  end
+
   class CheckOwner < RuleBox::Strategy
     desc 'Isso é uma descrição'
     def process

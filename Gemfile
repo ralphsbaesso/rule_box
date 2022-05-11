@@ -8,6 +8,7 @@ gemspec
 gem 'rake', '~> 12.0'
 
 group :development, :test do
+  gem 'byebug', '~> 11.1', '>= 11.1.3'
   gem 'rspec', '~> 3.0'
   gem 'rubocop', '~> 1.28', '>= 1.28.2', require: false
   gem 'simplecov', '~> 0.21.2', require: false

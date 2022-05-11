@@ -4,12 +4,25 @@ require 'time'
 require 'json'
 require 'set'
 
+require 'rule_box/execution_hook'
+
 module RuleBox
+  include RuleBox::ExecutionHook
   class Error < StandardError; end
 
   class << self
     def show_mapped_classes
       RuleBox::Mapper.mapped.to_a
+    end
+
+    def configure
+      block_given? ? yield(settings) : settings
+    end
+
+    private
+
+    def settings
+      self
     end
   end
 end

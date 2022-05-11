@@ -14,7 +14,7 @@ RSpec.describe RuleBox::MethodHelper do
         facade.instance_variable_set :@steps, steps
 
         expect(facade.send(:errors)).to_not be(errors)
-        expect(facade.send(:model)).to_not equal(model)
+        expect(facade.send(:model)).to equal(model)
         expect(facade.send(:steps)).to_not be(steps)
       end
     end
