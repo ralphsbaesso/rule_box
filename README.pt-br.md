@@ -59,7 +59,7 @@ Existem alguns *helpers* na classe *Strategy* que irão ajudá-lo.
 
 ```ruby
 strategy.model # Retorna o "Model"
-strategy.set_status # Seta o valor semáforo: [:red, :yellow, :green] 
+strategy.set_status # Seta o valor status: [:red, :yellow, :green] 
 strategy.add_error # Adiciona uma mensagem de erro
 ```
 
@@ -92,7 +92,7 @@ class User
   attr_accessor :name
 
   # lista de regras de negócio
-  rules_of_insert Rules::CheckName
+  rules Rules::CheckName
 
 end
 ```
@@ -103,21 +103,21 @@ require 'rule_box/facade'
 
 user = User.new
 facade = Rulebox::Facade.new
-facade.insert user
+facade.exec user
 puts facade.status # :red
 puts facade.errors # ["Nome não pode ficar em branco"]
 
 user = User.new
 user.name = 'Ana'
 facade =  Rulebox::Facade.new
-facade.insert user
+facade.exec user
 puts facade.status # :red
 puts facade.errors  # ["Nome deve conter pelo menos 4 caracteres"]
 
 user = User.new
 user.name = 'Alex'
 facade =  Rulebox::Facade.new
-facade.insert user
+facade.exec user
 puts facade.status # :green
 puts facade.errors # []
 
@@ -167,34 +167,67 @@ class User
   include RuleBox::Mapper
   attr_accessor :name, :age
 
-  rules_of_insert Rules::CheckName, Rules::CheckAge, Rules::SaveModel
+  rules Rules::CheckName, Rules::CheckAge, Rules::SaveModel
 
 end
 
 ```
 
  
-## Desenvolvimento
+## Hooks
 
-Uma vez no modo de desenvolvimento, ele pode exibir as etapas (steps) que ocorreram no Facade.
+Existem alguns hooks que podem auxiliar na chamadas das regras de negócio
 
+| Hook             | Descrição                        |
+|------------------|----------------------------------|
+| after_rule       | depois de cada regra             |
+| after_rules      | depois de todas as regras        |
+| around_rule      | na execução de cada regra        |
+| around_rules     | na execução de todas as regras   |
+| customize_result | customiza o retorno do resultado |
+| before_rule      | antes de cada regra              |
+| before_rules     | antes de todas as regras         |
+| rescue_from      | captura uma exeção               |
+
+Exemplo
 ```ruby
+
+User.before_rules { puts 'before all' }
+User.before_rule do |facade|
+  puts 'before'
+  puts facade.steps.last
+end
+User.after_rule do |facade|
+  puts facade.steps.last
+  puts 'after'
+end
+User.before_rules { puts 'after all' }
+
+
 user = User.new
 user.name = 'Carlos'
 user.age = 19
 
 facade = RuleBox::Facade.new
-facade.show_steps = true
-facade.insert user
+facade.exec user
 
 # Saída do Log
-# [2020-07-29T08:09:00.212-03:00] { method: insert, model: User, args: {} }
-# [2020-07-29T08:09:00.212-03:00] amount of rules 3
+# before all
+# before
 # [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::CheckName.
+# [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::CheckName.
+# after
+# before
 # [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::CheckAge.
+# [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::CheckAge.
+# after
+# before
 # [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::SaveModel.
-# [2020-07-29T08:09:00.212-03:00] finalized the process on the facade.
+# [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::SaveModel.
+# after
+# after all
 ```
+
 
 ## License
 
