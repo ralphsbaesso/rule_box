@@ -109,7 +109,13 @@ module RuleBox
 
     def execute_strategy
       add_step "executing of rule: #{@current_strategy.class.name}."
-      @last_result = @current_strategy.process
+
+      @last_result =
+        if @current_strategy.respond_to? :perform_with_result
+          @current_strategy.perform_with_result(@last_result)
+        else
+          @current_strategy.perform
+        end
     end
 
     def failure_status

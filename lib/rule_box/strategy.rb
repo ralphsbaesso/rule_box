@@ -17,6 +17,10 @@ module RuleBox
       raise 'Must implement this method'
     end
 
+    def perform
+      process
+    end
+
     private
 
     def model
@@ -28,6 +32,12 @@ module RuleBox
 
       def desc(description)
         @description = description
+      end
+
+      def perform(&block)
+        define_method :perform_with_result do |result = nil|
+          instance_exec(result, &block)
+        end
       end
     end
   end
