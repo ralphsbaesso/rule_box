@@ -3,10 +3,6 @@
 require 'bundler/setup'
 require 'rule_box'
 
-require_relative 'examples/user'
-require_relative 'examples/book'
-require_relative 'examples/tester'
-
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'

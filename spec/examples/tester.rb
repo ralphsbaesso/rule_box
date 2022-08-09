@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../lib/rule_box/mapper'
-require_relative 'rules'
+require_relative 'v1/rules'
 
 class Tester < OpenStruct
   include RuleBox::Mapper
@@ -21,34 +21,34 @@ class Tester < OpenStruct
         Rules::ThrowsStandardError
 
   around_rule do |facade|
-    facade.model.one = 1
+    facade.entity.one = 1
     facade.run
-    facade.model.two = 2
+    facade.entity.two = 2
   end
 
   around_rules do |facade|
-    facade.model.messages = [:before]
+    facade.entity.messages = [:before]
     facade.run
-    facade.model.messages << :after
+    facade.entity.messages << :after
   end
 
   before_rule do |facade|
-    facade.model.before_one = 1
-    facade.model.before_two = 2
+    facade.entity.before_one = 1
+    facade.entity.before_two = 2
   end
 
   before_rules do |facade|
-    facade.model.before_messages = [:before]
-    facade.model.before_messages << :after
+    facade.entity.before_messages = [:before]
+    facade.entity.before_messages << :after
   end
 
   after_rule do |facade|
-    facade.model.after_one = 1
-    facade.model.after_two = 2
+    facade.entity.after_one = 1
+    facade.entity.after_two = 2
   end
 
   after_rules do |facade|
-    facade.model.after_messages = [:before]
-    facade.model.after_messages << :after
+    facade.entity.after_messages = [:before]
+    facade.entity.after_messages << :after
   end
 end

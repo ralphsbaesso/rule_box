@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../examples/tester'
+
 RSpec.describe RuleBox::ExecutionHook do
   context 'around_all' do
     it do

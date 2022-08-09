@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/rule_box'
+require_relative '../../../lib/rule_box'
 
-module Strategy
+module Calc
   class FirstValue < RuleBox::Strategy
     perform do
       1
@@ -15,17 +15,17 @@ module Strategy
     end
   end
 
-  class Calc < RuleBox::Strategy
+  class Plus < RuleBox::Strategy
     perform do |results|
       results.reduce(&:+)
     end
   end
-end
 
-class UseCase
-  include RuleBox::Mapper
+  class UseCase
+    include RuleBox::Mapper
 
-  rules Strategy::FirstValue,
-        Strategy::SecondValue,
-        Strategy::Calc
+    rules FirstValue,
+          SecondValue,
+          Plus
+  end
 end

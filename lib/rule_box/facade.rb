@@ -79,8 +79,13 @@ module RuleBox
       raise 'Process already executed' if @executed
     end
 
-    def check_has_strategies!
-      raise "class [#{current_class}] without mapped rules to [#{current_method}]'" unless @strategies
+    def check_strategies!(class_strategies)
+      raise "class [#{current_class}] without mapped rules to [#{current_method}]'" if class_strategies.empty?
+
+      classes = class_strategies.reject { |strategy| strategy < RuleBox::Strategy }
+      unless classes.size.zero?
+        raise "class [#{classes.map(&:name).join(', ')}] must extends RuleBox::Strategy or your subclass."
+      end
     end
 
     def current_class
@@ -110,8 +115,6 @@ module RuleBox
     end
 
     def execute_strategies
-      add_step "amount of rules #{@strategies.count}"
-
       @strategies.each do |strategy|
         @current_strategy = strategy
         execute_one
@@ -170,8 +173,9 @@ module RuleBox
 
     def perform(method, entity, **args)
       check_executed!
+      check_strategies!(entity.class.strategies(method) || [])
       initialize_variables!(method, entity, args)
-      check_has_strategies!
+      add_step "initialize { method: #{method}, entity: #{current_class}, rules: #{@strategies.count} }"
       execute_all
       resolve_exception!
       return_result

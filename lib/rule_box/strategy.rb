@@ -5,8 +5,8 @@ module RuleBox
     include RuleBox::MethodHelper
     attr_reader :facade
 
-    delegate_methods :add_error, :entity, :current_method, :bucket, :errors,
-                     :executed, :get, :set_status, :status, :steps, :use_case,
+    delegate_methods :add_error, :current_method, :bucket, :entity, :errors,
+                     :executed, :last_result, :get, :set_status, :status, :steps, :use_case,
                      to: :facade, set_private: true
 
     def initialize(facade = nil)

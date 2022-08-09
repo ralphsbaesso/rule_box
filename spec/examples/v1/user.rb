@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/rule_box/mapper'
+require_relative '../../../lib/rule_box'
 require_relative 'rules'
 
 class User

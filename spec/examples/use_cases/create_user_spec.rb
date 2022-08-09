@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../examples/use_cases/create_user'
+require_relative 'create_user'
 
 RSpec.describe 'UseCase' do
   let(:current_user) { OpenStruct.new(name: :admin) }

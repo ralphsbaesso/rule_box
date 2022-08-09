@@ -43,89 +43,29 @@ RSpec.describe RuleBox::Facade do
     end
   end
 
-  context 'add rules to models' do
-    context :user do
-      before :each do
-        RuleBox.configure do |config|
-          config.rescue_from Exception do |facade|
-            facade.add_error 'Ops, ocorreu um erro!'
-          end
-        end
-      end
-
-      after(:all) { RuleBox::Facade.clear_configuration! }
-
-      it 'validate name of user' do
-        user = User.new
-        user.name = 'Beltrano'
-        user.age = 19
+  context 'instance methods' do
+    context '#check_strategies' do
+      it 'validate if it have strategies' do
+        current_class = 'MyClass'
+        current_method = 'my_method'
+        allow_any_instance_of(RuleBox::Facade).to receive(:current_class).and_return(current_class)
+        allow_any_instance_of(RuleBox::Facade).to receive(:current_method).and_return(current_method)
 
         facade = RuleBox::Facade.new
-        facade.exec :insert, user
-        expect(facade.status).to eq(:green)
+        expect { facade.send(:check_strategies!, []) }
+          .to raise_error("class [#{current_class}] without mapped rules to [#{current_method}]'")
       end
 
-      it 'must throws error' do
-        user = User.new
-        user.name = 'name'
-        user.age = 19
-        user.throws_error = true
+      it 'validate if all strategies extends RuleBox::Strategy' do
+        strategy1 = Class.new(RuleBox::Strategy)
+        strategy2 = Class.new(OpenStruct)
+        strategy3 = Class.new(RuleBox::Strategy)
+
+        strategies = [strategy1, strategy2, strategy3]
 
         facade = RuleBox::Facade.new
-        facade.exec :insert, user
-
-        errors = facade.errors
-        expect(errors.count).to eq(1)
-        expect(errors.first).to eq('Ops, ocorreu um erro!')
-      end
-
-      it 'show current method' do
-        user = User.new
-        user.name = 'name'
-        user.age = 20
-
-        facade = RuleBox::Facade.new
-        expect(facade.current_method).to be_nil
-        facade.exec :insert, user
-        expect(facade.current_method).to eq(:insert)
-      end
-
-      context 'with dynamic rules' do
-        it 'must check one error' do
-          user = User.new
-          user.name = 'leo'
-          user.age = 19
-
-          facade = RuleBox::Facade.new
-          facade.exec :check, user
-          expect(facade.errors.count).to eq(1)
-          expect(facade.errors.first).to eq('Nome deve conter pelo menos 4 caracteres')
-        end
-      end
-    end
-
-    context :book do
-      let(:current_errors) { [] }
-
-      before :each do
-        RuleBox::Facade.configure do |config|
-          config.rescue_from(StandardError) { |error| current_errors << error.message }
-          config.add_dependency(:user) do |obj|
-            raise 'Must be an User' unless obj.is_a?(User)
-          end
-        end
-      end
-      after(:all) { RuleBox::Facade.clear_configuration! }
-
-      it 'must validate user is "Leo"' do
-        user = User.new
-        book = Book.new
-        facade = RuleBox::Facade.new(user: user)
-        facade.exec :insert, book
-
-        expect(facade.status).to eq(:red)
-        expect(facade.errors.first).to eq('is not Leo')
-        expect(current_errors.empty?).to be_truthy
+        expect { facade.send(:check_strategies!, strategies) }
+          .to raise_error('class [] must extends RuleBox::Strategy or your subclass.')
       end
     end
   end

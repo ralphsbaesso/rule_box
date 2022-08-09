@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/rule_box/strategy'
-
 module Rules
-  class CheckName < RuleBox::Strategy
+  class Strategy < RuleBox::Strategy
+    def model
+      entity
+    end
+  end
+
+  class CheckName < Strategy
     desc 'Verifica nome'
-    def process
+    def perform
       user = model
 
       if user.name.nil?
@@ -18,8 +22,8 @@ module Rules
     end
   end
 
-  class CheckAge < RuleBox::Strategy
-    def process
+  class CheckAge < Strategy
+    def perform
       user = model
 
       if !user.age.is_a? Integer
@@ -32,31 +36,31 @@ module Rules
     end
   end
 
-  class SaveModel < RuleBox::Strategy
-    def process
+  class SaveModel < Strategy
+    def perform
       if status == :green
         # save model
       end
     end
   end
 
-  class ThrowsError < RuleBox::Strategy
-    def process
+  class ThrowsError < Strategy
+    def perform
       user = model
       raise 'any thing' if user.throws_error
     end
   end
 
-  class ThrowsStandardError < RuleBox::Strategy
-    def process
+  class ThrowsStandardError < Strategy
+    def perform
       user = model
       raise StandardError if user.throws_standard_error
     end
   end
 
-  class CheckOwner < RuleBox::Strategy
+  class CheckOwner < Strategy
     desc 'Isso é uma descrição'
-    def process
+    def perform
       name = get :name
       unless name == 'Leo'
         add_error 'is not Leo'
