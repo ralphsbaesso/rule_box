@@ -5,7 +5,7 @@ module RuleBox
     include RuleBox::MethodHelper
     include RuleBox::ExecutionHook
 
-    attr_reader :exception, :strategies, :current_strategy, :current_method, :bucket, :executed, :last_result, :model,
+    attr_reader :entity, :exception, :strategies, :current_strategy, :current_method, :bucket, :executed, :last_result,
                 :status
 
     attr_clones :errors, :steps
@@ -17,14 +17,14 @@ module RuleBox
 
     def add_error(msg)
       if msg.is_a? Array
-        @errors.concat(msg)
+        msg.each { |message| add_error(message) }
       else
         @errors << msg
       end
     end
 
-    def exec(method = :perform, model, **args)
-      perform method, model, **args
+    def exec(method = :perform, entity, **args)
+      perform method, entity, **args
     end
 
     def get(key)
@@ -42,11 +42,27 @@ module RuleBox
       @status = status
     end
 
+    def instance_values
+      hash = {
+        current_strategy: @current_strategy&.instance_values,
+        strategies: (@strategies || []).map(&:instance_values)
+      }
+
+      keys.each { |k, v| hash[k.to_sym] = v.clone }
+
+      %i[
+        entity exception current_class current_method bucket
+        executed last_result status errors steps
+      ].each { |key| hash[key] = send(key).clone }
+
+      hash
+    end
+
     private
 
     def add_step(value)
       new_value = "[#{DateTime.now.strftime('%FT%T.%L%:z')}] #{value}"
-      steps << new_value
+      @steps << new_value
     end
 
     def around(around_method, current_method)
@@ -55,7 +71,7 @@ module RuleBox
       @next_run = nil
     end
 
-    def build_build_bucket
+    def build_bucket
       {}
     end
 
@@ -68,7 +84,7 @@ module RuleBox
     end
 
     def current_class
-      model.class
+      entity.class
     end
 
     def execute_all
@@ -110,11 +126,13 @@ module RuleBox
     def execute_strategy
       add_step "executing of rule: #{@current_strategy.class.name}."
 
+      strategy_method = @current_strategy.method(:perform)
+
       @last_result =
-        if @current_strategy.respond_to? :perform_with_result
-          @current_strategy.perform_with_result(@last_result)
+        if strategy_method.parameters.empty?
+          strategy_method.call
         else
-          @current_strategy.perform
+          strategy_method.call(@last_result)
         end
     end
 
@@ -123,36 +141,36 @@ module RuleBox
     end
 
     def has_hook?(hook_method)
-      model.class.has_hook? hook_method
+      entity.class.has_hook? hook_method
     end
 
     def hooks
       [current_class, self.class, RuleBox]
     end
 
-    def initialize_variables!(method, model, args)
+    def initialize_variables!(method, entity, args)
       @executed = true
-      @model = model
+      @entity = entity
       @current_method = method
       @status = start_status
-      @bucket = build_build_bucket
+      @bucket = build_bucket
       @steps = []
       @errors = []
       args.each { |key, value| bucket[key] = value }
-      @strategies = load_strategies(method, model)
+      @strategies = load_strategies(method, entity)
     end
 
     def keys
       @keys ||= {}
     end
 
-    def load_strategies(method, model)
-      model.class.strategies(method)&.map { |klass| klass.new(self) }
+    def load_strategies(method, entity)
+      entity.class.strategies(method)&.map { |klass| klass.new(self) }
     end
 
-    def perform(method, model, **args)
+    def perform(method, entity, **args)
       check_executed!
-      initialize_variables!(method, model, args)
+      initialize_variables!(method, entity, args)
       check_has_strategies!
       execute_all
       resolve_exception!
@@ -219,6 +237,10 @@ module RuleBox
         end
 
         raise errors.join("\n") unless errors.empty?
+      end
+
+      def use_case!
+        define_method(:use_case) { entity }
       end
 
       private

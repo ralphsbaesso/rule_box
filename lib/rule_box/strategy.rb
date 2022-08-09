@@ -3,28 +3,29 @@
 module RuleBox
   class Strategy
     include RuleBox::MethodHelper
-
     attr_reader :facade
 
-    delegate_methods :add_error, :current_method, :bucket, :errors, :executed, :get, :set_status, :status, :steps,
-                     to: :facade
+    delegate_methods :add_error, :entity, :current_method, :bucket, :errors,
+                     :executed, :get, :set_status, :status, :steps, :use_case,
+                     to: :facade, set_private: true
 
     def initialize(facade = nil)
       @facade = facade
     end
 
-    def process
+    def perform
       raise 'Must implement this method'
     end
 
-    def perform
-      process
-    end
+    def instance_values
+      hash = { strategy_name: self.class.name }
+      instance_variables.each do |name|
+        next if name == :@facade
 
-    private
+        hash[name[1..]] = instance_variable_get(name)
+      end
 
-    def model
-      @facade.instance_variable_get :@model
+      hash
     end
 
     class << self
@@ -35,7 +36,7 @@ module RuleBox
       end
 
       def perform(&block)
-        define_method :perform_with_result do |result = nil|
+        define_method :perform do |result = nil|
           instance_exec(result, &block)
         end
       end

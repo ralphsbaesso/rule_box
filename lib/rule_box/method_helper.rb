@@ -16,12 +16,14 @@ module RuleBox
         end
       end
 
-      def delegate_methods(*methods, to:)
+      def delegate_methods(*methods, to:, set_private: false)
         methods.each do |method|
           define_method method do |*rest, **restkey|
             object = send to
             object.send method, *rest, **restkey
           end
+
+          private method if set_private
         end
       end
     end
