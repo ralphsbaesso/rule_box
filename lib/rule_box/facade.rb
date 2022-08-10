@@ -160,21 +160,22 @@ module RuleBox
       @steps = []
       @errors = []
       args.each { |key, value| bucket[key] = value }
-      @strategies = load_strategies(method, entity)
+    end
+
+    def initialize_strategies!(method, entity)
+      class_strategies = entity.class.strategies(method)
+      check_strategies!(class_strategies)
+      @strategies = class_strategies.map { |klass| klass.new(self) }
     end
 
     def keys
       @keys ||= {}
     end
 
-    def load_strategies(method, entity)
-      entity.class.strategies(method)&.map { |klass| klass.new(self) }
-    end
-
     def perform(method, entity, **args)
       check_executed!
-      check_strategies!(entity.class.strategies(method) || [])
       initialize_variables!(method, entity, args)
+      initialize_strategies!(method, entity)
       add_step "initialize { method: #{method}, entity: #{current_class}, rules: #{@strategies.count} }"
       execute_all
       resolve_exception!
