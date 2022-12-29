@@ -49,10 +49,10 @@ module RuleBox
       target = instance_variable_get "@#{target_name}"
 
       if target.is_a?(Array) && data.is_a?(Array)
-        target.concat! data
+        target.concat data
       elsif target.is_a?(Hash) && data.is_a?(Hash)
         target.merge! data
-      else
+      elsif data && target.nil?
         instance_variable_set "@#{target_name}", data
       end
     end

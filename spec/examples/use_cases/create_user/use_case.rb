@@ -5,15 +5,15 @@ module CreateUser
     def perform(use_case, _result)
       name = use_case.attr.name
 
-      Error(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
+      Neutral(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
     end
   end
 
   class CheckEmail < Strategy
-    def perform(use_case, _result)
+    def perform(use_case, result)
       email = use_case.attr.email
 
-      Error(errors: ['Invalid email!']) unless email =~ URI::MailTo::EMAIL_REGEXP
+      Neutral(result, errors: ['Invalid email!']) unless email =~ URI::MailTo::EMAIL_REGEXP
     end
   end
 
@@ -24,7 +24,10 @@ module CreateUser
   end
 
   class Create < Strategy
-    def perform(use_case, _result)
+    def perform(use_case, result)
+      errors = result.errors
+      return Error(result) unless errors.nil? || errors.empty?
+
       user = User.new
       user.name = use_case.attr.name
       user.email = use_case.attr.email

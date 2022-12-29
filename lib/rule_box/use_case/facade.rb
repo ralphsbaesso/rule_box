@@ -114,7 +114,7 @@ module RuleBox
       def handler(result)
         return result if result.is_a? RuleBox::Result
 
-        new_result
+        @last_result
       end
 
       def new_result

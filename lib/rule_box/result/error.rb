@@ -9,7 +9,7 @@ module RuleBox
 
       def concat!(result)
         _concat_meta!(result.meta)
-        @errors = + result.errors
+        _concat_errors!(result.errors)
       end
     end
   end

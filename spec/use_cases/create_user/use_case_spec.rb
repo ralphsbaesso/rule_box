@@ -43,6 +43,18 @@ RSpec.describe CreateUser::UseCase do
       expect(result.status).to eq('error')
       expect(result.errors).to eq(['Invalid email!'])
     end
+
+    it 'must return two error messages' do
+      name = nil
+      email = 'john@rule_box.com'
+
+      use_case = CreateUser::UseCase.new
+      result = use_case.exec name: name, email: email
+
+      expect(result).to be_a(RuleBox::Result)
+      expect(result.status).to eq('error')
+      expect(result.errors.size).to eq(2)
+    end
   end
 
   context 'with exception' do
