@@ -2,60 +2,38 @@
 
 module RuleBox
   module Mapper
-    extend RuleBox::ExecutionHook
+    def rules(*rules, **options)
+      current_rules['strategies'] = rules
+      options.each do |k, v|
+        word = k.to_s.downcase
+        raise "Reserved word [#{word}]" if word == 'strategies'
 
-    if const_defined? 'ActiveSupport::Concern'
-      # to Rails project
-      extend ActiveSupport::Concern
-      included { include RuleBox::ExecutionHook }
-    else
-      def self.included(klass)
-        klass.include RuleBox::ExecutionHook
-        klass.extend ClassMethods
-        mapped << klass
+        current_rules[k] = v
       end
     end
 
-    def self.mapped
-      @mapped ||= Set.new
+    def strategies
+      current_rules['strategies']
     end
 
-    module ClassMethods
-      def rules(*rules)
-        add_rules :perform, rules
+    def show_strategies
+      current_rules.map do |method, strategies|
+        {
+          method: method,
+          strategies: strategies.map do |strategy|
+            {
+              name: strategy.name,
+              description: strategy.description
+            }
+          end
+        }
       end
+    end
 
-      def rules_of(method, *rules)
-        add_rules method.to_sym, rules
-      end
+    private
 
-      def strategies(method)
-        current_rules[method]
-      end
-
-      def show_strategies
-        current_rules.map do |method, strategies|
-          {
-            method: method,
-            strategies: strategies.map do |strategy|
-              {
-                name: strategy.name,
-                description: strategy.description
-              }
-            end
-          }
-        end
-      end
-
-      private
-
-      def add_rules(method, rules)
-        current_rules[method] = rules
-      end
-
-      def current_rules
-        @current_rules ||= {}
-      end
+    def current_rules
+      @current_rules ||= {}
     end
   end
 end

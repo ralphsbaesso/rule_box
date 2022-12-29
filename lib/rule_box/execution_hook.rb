@@ -2,68 +2,62 @@
 
 module RuleBox
   module ExecutionHook
-    def self.included(base)
-      base.extend ClassMethods
+    new_hooks = %i[
+      after_rule after_rules
+      around_rule around_rules
+      before_rule before_rules
+    ]
+
+    new_hooks.each do |rule|
+      define_method rule do |&block|
+        hooks[rule] = block
+      end
     end
 
-    module ClassMethods
-      new_hooks = %i[
-        after_rule after_rules around_rule around_rules
-        customize_result
-        before_rule before_rules
-      ]
+    def call_hook(type, arg = nil)
+      block = hooks[type.to_sym]
+      return nil unless block.is_a? Proc
 
-      new_hooks.each do |rule|
-        define_method rule do |&block|
-          hooks[rule] = block
-        end
+      block.call(arg)
+    end
+
+    def clear_hooks!
+      @rescue_handlers = []
+      @hooks = {}
+    end
+
+    def has_hook?(name)
+      hooks[name.to_sym].is_a? Proc
+    end
+
+    def rescue_from(*klasses, with:)
+      klasses.each do |klass|
+        match = klass < Exception || klass == Exception
+        raise ArgumentError, "#{klass.inspect} must be an Exception class" unless match
+
+        rescue_handlers.concat [[klass, with]]
+      end
+    end
+
+    def resolve_exception!(exc, entity)
+      rescue_handlers.each do |exception, method_name|
+        next unless exc.is_a? exception
+
+        method = entity.method method_name
+        return method.parameters.empty? ? method.call : method.call(exc)
       end
 
-      def call_hook(type, arg = nil)
-        block = hooks[type.to_sym]
-        return nil unless block.is_a? Proc
+      nil
+    end
 
-        block.call(arg)
-      end
+    private
 
-      def clear_hooks!
-        @rescue_handlers = []
-        @hooks = {}
-      end
+    def rescue_handlers
+      @rescue_handlers ||= []
+    end
 
-      def has_hook?(name)
-        hooks[name.to_sym].is_a? Proc
-      end
-
-      def rescue_from(*klasses, &block)
-        klasses.each do |klass|
-          match = klass < Exception || klass == Exception
-          raise ArgumentError, "#{klass.inspect} must be an Exception class" unless match
-
-          rescue_handlers.concat [[klass, block]]
-        end
-      end
-
-      def rescue_handlers
-        @rescue_handlers ||= []
-      end
-
-      def resolve_exception!(facade)
-        rescue_handlers.each do |exception, block|
-          next unless facade.exception.is_a? exception
-
-          block.call facade
-          return true
-        end
-
-        nil
-      end
-
-      private
-
-      def hooks
-        @hooks ||= {}
-      end
+    def hooks
+      @hooks ||= {}
     end
   end
 end
