@@ -83,6 +83,10 @@ module RuleBox
             end
           end
         M
+
+        class_eval <<~M, __FILE__, __LINE__ + 1
+          class #{sub}::Facade < #{self}::Facade; end
+        M
       end
     end
   end

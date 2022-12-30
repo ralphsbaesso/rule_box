@@ -25,12 +25,15 @@ module RuleBox
           strategies: (@strategies || []).map(&:instance_values)
         }
 
-        %i[
-          use_case exception current_class
-          last_result steps
-        ].each { |key| hash[key] = send(key).clone }
+        %i[use_case exception current_classlast_result steps].each do |key|
+          hash[key] = send(key).clone
+        end
 
         hash
+      end
+
+      def steps
+        @steps.clone
       end
 
       private
@@ -46,10 +49,6 @@ module RuleBox
             send(current_method)
           end
         end
-      end
-
-      def build_bucket
-        {}
       end
 
       def check_strategies!(class_strategies)
@@ -91,7 +90,7 @@ module RuleBox
         @strategies.each do |strategy|
           @current_strategy = strategy
           execute_one
-          break if failure?
+          break if current_strategy.stop? || failure?
         end
       rescue Exception => e
         @exception = e
@@ -103,19 +102,13 @@ module RuleBox
         add_step "executing of rule: #{current_strategy.class.name}."
 
         result = current_strategy.perform(use_case, last_result)
-        @last_result = handler(result)
+        @last_result = handler_result(result)
       end
 
-      def handler(result)
+      def handler_result(result)
         return result if result.is_a? RuleBox::Result
 
         @last_result
-      end
-
-      def new_result
-        return base_result_class.new(last_result) if last_result.is_a? RuleBox::Result
-
-        base_result_class.new
       end
 
       def base_result_class
@@ -145,13 +138,7 @@ module RuleBox
       end
 
       def return_result
-        result = nil
-        hooks.each do |hook|
-          result = hook.call_hook(:customize_result, self)
-          break if result
-        end
-
-        result || last_result
+        last_result
       end
 
       def resolve_exception!
@@ -163,10 +150,6 @@ module RuleBox
         raise @exception unless result.is_a? RuleBox::Result
 
         @last_result = result
-      end
-
-      def start_status
-        :green
       end
     end
   end

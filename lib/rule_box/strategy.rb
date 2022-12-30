@@ -6,6 +6,15 @@ module RuleBox
       raise 'Must implement this method!'
     end
 
+    def stop!(&block)
+      @stop = true
+      block&.call
+    end
+
+    def stop?
+      !@stop.nil?
+    end
+
     def Error(result = nil, **args)
       RuleBox::Result::Error.new(result, **args)
     end
