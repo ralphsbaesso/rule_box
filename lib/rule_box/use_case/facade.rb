@@ -19,13 +19,6 @@ module RuleBox
         return_result
       end
 
-      def run
-        return unless @next_run
-
-        send @next_run
-        true
-      end
-
       def instance_values
         hash = {
           current_strategy: @current_strategy&.instance_values,
@@ -48,9 +41,11 @@ module RuleBox
       end
 
       def around(around_method, current_method)
-        @next_run = current_method
-        hooks.each { |hook| hook.call_hook around_method, self }
-        @next_run = nil
+        hooks.each do |hook|
+          hook.call_hook(around_method, use_case) do
+            send(current_method)
+          end
+        end
       end
 
       def build_bucket
@@ -163,7 +158,7 @@ module RuleBox
         return unless @exception.is_a?(Exception)
 
         result = current_class.resolve_exception!(@exception, use_case)
-        result = RuleBox.resolve_exception!(@exception, RuleBox) unless result.is_a? RuleBox::Result
+        result = RuleBox.resolve_exception!(@exception, use_case) unless result.is_a? RuleBox::Result
 
         raise @exception unless result.is_a? RuleBox::Result
 
