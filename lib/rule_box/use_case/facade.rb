@@ -3,12 +3,11 @@
 module RuleBox
   class UseCase
     class Facade
-      attr_reader :use_case, :exception, :strategies, :current_strategy, :last_result
+      attr_reader :use_case, :exception, :strategies, :current_strategy, :result
 
       def initialize(use_case)
         @use_case = use_case
         @steps = []
-        @last_result = base_result_class.new
       end
 
       def perform
@@ -25,7 +24,7 @@ module RuleBox
           strategies: (@strategies || []).map(&:instance_values)
         }
 
-        %i[use_case exception current_classlast_result steps].each do |key|
+        %i[use_case exception current_class result steps].each do |key|
           hash[key] = send(key).clone
         end
 
@@ -90,6 +89,7 @@ module RuleBox
         @strategies.each do |strategy|
           @current_strategy = strategy
           execute_one
+
           break if current_strategy.stop? || failure?
         end
       rescue Exception => e
@@ -101,22 +101,12 @@ module RuleBox
       def execute_strategy
         add_step "executing of rule: #{current_strategy.class.name}."
 
-        result = current_strategy.perform(use_case, last_result)
-        @last_result = handler_result(result)
-      end
-
-      def handler_result(result)
-        return result if result.is_a? RuleBox::Result
-
-        @last_result
-      end
-
-      def base_result_class
-        RuleBox::Result::Neutral
+        proxy = StrategyProxy.new(current_strategy)
+        @result = proxy.perform use_case, result
       end
 
       def failure?
-        last_result.is_a?(RuleBox::Result) && last_result.status == status_error
+        result.is_a?(RuleBox::Result) && result.status == status_error
       end
 
       def status_error
@@ -138,7 +128,7 @@ module RuleBox
       end
 
       def return_result
-        last_result
+        result
       end
 
       def resolve_exception!
@@ -149,7 +139,7 @@ module RuleBox
 
         raise @exception unless result.is_a? RuleBox::Result
 
-        @last_result = result
+        @result = result
       end
     end
   end

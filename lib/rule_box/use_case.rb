@@ -69,7 +69,7 @@ module RuleBox
         super
 
         class_eval <<~M, __FILE__, __LINE__ + 1
-          class #{sub}::Attribute < #{self}::Attribute
+          class ::#{sub}::Attribute < #{self}::Attribute
             def self.attribute_names
               @attribute_names ||= #{self}::Attribute.names
             end
@@ -77,7 +77,7 @@ module RuleBox
         M
 
         class_eval <<~M, __FILE__, __LINE__ + 1
-          class #{sub}::Dependency < #{self}::Dependency
+          class ::#{sub}::Dependency < #{self}::Dependency
             def self.dependencies
               @dependencies ||= #{self}::Dependency.dependencies.clone
             end
@@ -85,7 +85,7 @@ module RuleBox
         M
 
         class_eval <<~M, __FILE__, __LINE__ + 1
-          class #{sub}::Facade < #{self}::Facade; end
+          class ::#{sub}::Facade < #{self}::Facade; end
         M
       end
     end

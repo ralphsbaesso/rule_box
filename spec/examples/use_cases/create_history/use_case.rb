@@ -2,7 +2,7 @@
 
 module CreateHistory
   class StrategyBase < Strategy
-    def perform(_use_case, _result); end
+    def perform; end
   end
 
   class FirstStep < StrategyBase; end
@@ -12,9 +12,9 @@ module CreateHistory
   class ThirdStep < StrategyBase; end
 
   class FinalStep < Strategy
-    def perform(use_case, _result)
+    def perform(use_case)
       history = create_history use_case.attr.name, use_case.event
-      Success(data: history)
+      turn.success(data: history)
     end
 
     private

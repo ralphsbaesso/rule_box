@@ -2,10 +2,10 @@
 
 module CreateBook
   class CheckCode < Strategy
-    def perform(use_case, _result)
+    def perform(use_case)
       code = use_case.attr.code
 
-      Error(errors: ['Invalid code.']) if code.nil?
+      turn.error(errors: ['Invalid code.']) if code.nil?
     end
   end
 
@@ -16,12 +16,12 @@ module CreateBook
   end
 
   class Create < Strategy
-    def perform(use_case, _result)
+    def perform(use_case)
       book = Book.new
       book.name = use_case.attr.name
       book.code = use_case.attr.code
 
-      Success(data: book)
+      turn.success(data: book)
     end
   end
 

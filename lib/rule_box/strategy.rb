@@ -2,34 +2,45 @@
 
 module RuleBox
   class Strategy
-    def perform(_use_case, _result)
-      raise 'Must implement this method!'
+    class Stop < StandardError
+      attr_reader :__result
+
+      def initialize(__result: nil)
+        super()
+        @__result = __result
+      end
     end
 
-    def stop!(&block)
-      @stop = true
-      block&.call
+    def perform(_use_case, _result)
+      raise "Must implement this method in the \"#{self.class.name}\" class!"
     end
 
     def stop?
       !@stop.nil?
     end
 
-    def Error(result = nil, **args)
-      RuleBox::Result::Error.new(result, **args)
+    private
+
+    def stop(&block)
+      block&.call
+      @stop
     end
 
-    def Neutral(result = nil, **args)
-      RuleBox::Result::Neutral.new(result, **args)
+    def stop!(&block)
+      @stop = true
+      result = block&.call
+      raise Stop.new(__result: result)
     end
 
-    def Success(result = nil, **args)
-      RuleBox::Result::Success.new(result, **args)
+    def turn
+      self.class::Result.new
     end
 
-    def instance_values
-      { strategy_name: self.class.name }
+    def _neutral_result
+      turn.neutral.class.new
     end
+
+    class Result; end
 
     class << self
       attr_reader :description
@@ -37,6 +48,16 @@ module RuleBox
       def desc(description)
         @description = description
       end
+
+      def map_result(method_name, result_class)
+        self::Result.define_method(method_name) do |result = nil, **args|
+          result_class.new(result, **args)
+        end
+      end
     end
+
+    map_result :neutral, RuleBox::Result::Neutral
+    map_result :success, RuleBox::Result::Success
+    map_result :error, RuleBox::Result::Error
   end
 end

@@ -5,7 +5,7 @@ module CreateUser
     def perform(use_case, _result)
       name = use_case.attr.name
 
-      Neutral(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
+      turn.neutral(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
     end
   end
 
@@ -13,12 +13,12 @@ module CreateUser
     def perform(use_case, result)
       email = use_case.attr.email
 
-      Neutral(result, errors: ['Invalid email!']) unless email =~ URI::MailTo::EMAIL_REGEXP
+      turn.neutral(result, errors: ['Invalid email!']) unless email =~ URI::MailTo::EMAIL_REGEXP
     end
   end
 
   class CheckThrowAnyError < Strategy
-    def perform(use_case, _result)
+    def perform(use_case)
       raise ThrowAnyError if use_case.bucket[:throw_error]
     end
   end
@@ -26,13 +26,13 @@ module CreateUser
   class Create < Strategy
     def perform(use_case, result)
       errors = result.errors
-      return Error(result) unless errors.nil? || errors.empty?
+      return turn.error(result) unless errors.nil? || errors.empty?
 
       user = User.new
       user.name = use_case.attr.name
       user.email = use_case.attr.email
 
-      Success(data: user)
+      turn.success(data: user)
     end
   end
 
