@@ -11,6 +11,7 @@ module RuleBox
 
     attr_reader :attributes, :executed, :dependencies
     alias attr attributes
+    alias executed? executed
     alias dep dependencies
 
     def initialize(**args)
@@ -37,16 +38,16 @@ module RuleBox
       @bucket ||= {}
     end
 
+    def facade
+      @facade ||= self.class::Facade.new self
+    end
+
     private
 
     def check_executed!
       raise 'Process already executed' if @executed
 
       @executed = true
-    end
-
-    def facade
-      @facade ||= self.class::Facade.new self
     end
 
     class << self
