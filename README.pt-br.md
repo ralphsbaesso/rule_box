@@ -33,11 +33,72 @@ Ou instale você mesmo:
 
     $ gem install rule_box
 
+## Atenção
+A nova versão da gem é focada em cado de uso.
+Com o objetivo de desacoplar as entidades mas manter a robustez da execução das regras de negócios.
+
+As versões anteriores não serão mais compatíveis.
+
 ## Utilização
 
 Para começar a usar regras de negócios dentro de seu **model** com RuleBox, eles devem possuir uma lista de regras de negócios.
 
-#### 1. Criando regra de negócio (Strategy).
+#### 1. Criando caso de uso (UseCase)
+
+Crie um arquivo chamado *use_case.rb*.
+
+Nesta classe, ele deve herdar da classe RuleBox::UseCase.
+
+Mapeie os attributos que o caso de uso irá utilizar.
+
+Mapeie as regras de negócios que o caso de uso irá passar.
+
+```ruby
+require 'rule_box/use_case'
+
+class UseCase < RuleBox::UseCase
+  attributes :name, :email
+
+  rules CheckName,
+        CheckEmail,
+        Create
+end
+```
+
+Os attributos podem ser acessado pelo o método attributos ou por alias attr
+
+```ruby
+
+use_case =  UseCase.new
+use_case.attributes.name
+# ou
+use_case.attr.name
+```
+
+Pode obrigar injeção de dependência no seu caso de uso
+```ruby
+
+class UseCase < RuleBox::UseCase
+  add_dependency :user do |value|
+    'Must be an "User"' unless value.is_a? User
+  end
+end
+
+# irá lançar um exceção
+use_case = UseCase.new # => 'Must be an "User"'
+
+# deve passar a dependência na criação do objeto
+user = User.new
+use_case = UserCase.new user: user
+
+# pode acessar a dependência com o método "dependencies"
+use_case.dependencies.user # => User(clone)
+# ou
+use_case.dep.user # => User(clone)
+```
+
+
+#### 2. Criando regra de negócio (Strategy).
 
 Crie um arquivo chamado *check_name.rb*.
 
@@ -49,7 +110,7 @@ Então, dentro desse método, insira sua lógica de regra de negócios.
 require 'rule_box/strategy'
 
 class CheckName < RuleBox::Strategy
-  def process
+  def perform(use_case, result)
     # sua lógica aqui
   end
 end
@@ -58,9 +119,11 @@ end
 Existem alguns *helpers* na classe *Strategy* que irão ajudá-lo.
 
 ```ruby
-strategy.model # Retorna o "Model"
-strategy.set_status # Seta o valor status: [:red, :yellow, :green] 
-strategy.add_error # Adiciona uma mensagem de erro
+stop # para o cyclo de strategy 
+stop! # para o cyclo de strategy e a execução do código 
+turn.success # returna resultado de sucesso
+turn.error # returna resultado de erro
+turn.neutral # returna resultado imparcial
 ```
 
 Então, seu arquivo *check_name.rb* deverá ficar assim:
@@ -68,109 +131,76 @@ Então, seu arquivo *check_name.rb* deverá ficar assim:
 ```ruby
 require 'rule_box/strategy'
 
-class CheckName < RuleBox::Strategy
-  def process
-    user = model
-    if user.name.nil?
-      add_error 'Nome não pode ficar em branco'
-      set_status :red
-    elsif user.name.size < 4
-      add_error 'Nome deve conter pelo menos 4 caracteres'
-      set_status :red
+class CheckName < Strategy
+  def perform(use_case)
+    name = use_case.attr.name
+  
+    turn.neutral(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
+  end
+end
+  
+class CheckEmail < Strategy
+  def perform(use_case, result)
+    email = use_case.attr.email
+  
+    unless email =~ URI::MailTo::EMAIL_REGEXP
+      turn.neutral(result, errors: ['Invalid email!'])
     end
   end
+end
+  
+class Create < Strategy
+  def perform(use_case, result)
+    errors = result.errors
+    return turn.error(result) unless errors.nil? || errors.empty?
+  
+    user = User.new
+    user.name = use_case.attr.name
+    user.email = use_case.attr.email
+    RepositoryUser.save(user)
+  
+    turn.success(data: user) 
+  end 
 end
 ```
 
-#### 2. Mapear as regras de negócio no Model
+#### 3. Invocar o Caso de Uso
+
+
+Deve invocar o caso de uso com o métod *exec*. Irá retornar um objeto do tipo RuleBox::Result
 ```ruby
-require 'rule_box/mapper'
-require_relative 'validate_name'
+use_case = UseCase.new
+result = use_case.exec(name: 'Raulzito', email: 'raulzito@maluco.beleza')
 
-class User
-  include RuleBox::Mapper
-  attr_accessor :name
-
-  # lista de regras de negócio
-  rules Rules::CheckName
-
-end
+result.class.name # => RuleBox::Result::Neutral ou RuleBox::Result::Error ou RuleBox::Result::Error
+                  # ou pode retornar qualquer objeto que herda de RuleBox::Result
 ```
 
-#### 3. Chamar RuleBox
-```ruby
-require 'rule_box/facade'
-
-user = User.new
-facade = Rulebox::Facade.new
-facade.exec user
-puts facade.status # :red
-puts facade.errors # ["Nome não pode ficar em branco"]
-
-user = User.new
-user.name = 'Ana'
-facade =  Rulebox::Facade.new
-facade.exec user
-puts facade.status # :red
-puts facade.errors  # ["Nome deve conter pelo menos 4 caracteres"]
-
-user = User.new
-user.name = 'Alex'
-facade =  Rulebox::Facade.new
-facade.exec user
-puts facade.status # :green
-puts facade.errors # []
-
-```
-
-#### Aplicando multiplos regras de negócio
+Exemplos
 
 ```ruby
-class CheckName < RuleBox::Strategy
-  def process
-    user = model
 
-    if user.name.nil?
-      add_error 'Nome não pode ficar em branco'
-      set_status :red
-    elsif user.name.size < 4
-      add_error 'Nome deve conter pelo menos 4 caracteres'
-      set_status :red
-    end
-  end
-end
+use_case = UseCase.new
+result = use_case.exec
 
-class CheckAge < RuleBox::Strategy
-  def process
-    user = model
+result.class.name # => RuleBox::Result::Error
+result.status # => 'error'
+result.errors # => ["Name can't be empty!", "Invalid email!"]
 
-    if !user.age.is_a? Integer
-      add_error 'Idade precisa ser um número inteiro'
-      set_status :red
-    elsif user.age < 18
-      add_error 'Deve ser maior que 18'
-      set_status :red
-    end
-  end
-end
 
-class SaveModel < RuleBox::Strategy
-  def process
-    if status == :green
-      # DAO.persist_model(model)
-    end
-  end
-end
+use_case = UseCase.new
+result = use_case.exec name: 'my_name', email: '_invalid_email_'
 
-# Exemplo de classe com múltiplas regras de negócio
-class User
-  include RuleBox::Mapper
-  attr_accessor :name, :age
+result.status # => 'error'
+result.errors # => ["Invalid email!"]
 
-  rules Rules::CheckName, Rules::CheckAge, Rules::SaveModel
+use_case = UseCase.new
+result = use_case.exec name: 'Raulzito', email: 'raulzito@maluco.beleza'
+result.class.name # => RuleBox::Result::Success
+result.status # => 'ok'
 
-end
-
+user = result.data
+user.class.name # => User
 ```
 
  
@@ -184,7 +214,6 @@ Existem alguns hooks que podem auxiliar na chamadas das regras de negócio
 | after_rules      | depois de todas as regras        |
 | around_rule      | na execução de cada regra        |
 | around_rules     | na execução de todas as regras   |
-| customize_result | customiza o retorno do resultado |
 | before_rule      | antes de cada regra              |
 | before_rules     | antes de todas as regras         |
 | rescue_from      | captura uma exeção               |
@@ -192,24 +221,21 @@ Existem alguns hooks que podem auxiliar na chamadas das regras de negócio
 Exemplo
 ```ruby
 
-User.before_rules { puts 'before all' }
-User.before_rule do |facade|
-  puts 'before'
-  puts facade.steps.last
+class UserCase < RuleBox::UseCase
+  before_rules { puts 'before all' }
+  before_rule do |use_case|
+    puts 'before'
+    puts use_case.facade.steps.last
+  end
+  after_rule do |use_case|
+    puts use_case.facade.steps.last
+    puts 'after'
+  end
+  before_rules { puts 'after all' }
 end
-User.after_rule do |facade|
-  puts facade.steps.last
-  puts 'after'
-end
-User.before_rules { puts 'after all' }
 
-
-user = User.new
-user.name = 'Carlos'
-user.age = 19
-
-facade = RuleBox::Facade.new
-facade.exec user
+use_case = UseCase.new
+use_case.exec name: 'José', email: 'jose@uouou.com.br'
 
 # Saída do Log
 # before all
