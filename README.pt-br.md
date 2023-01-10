@@ -1,4 +1,5 @@
 # RuleBox
+___
 
 Esta gem tem como objetivo fornecer uma maneira forte e concreta de gerenciar suas regras de negócios, combinando o melhor dos dois mundos em Facade e Strategy, trazendo a você uma maneira simplificada de aplicar esses _Design Patterns_ em seu projeto.
 
@@ -176,7 +177,7 @@ result.class.name # => RuleBox::Result::Neutral ou RuleBox::Result::Error ou Rul
                   # ou pode retornar qualquer objeto que herda de RuleBox::Result
 ```
 
-Exemplos
+Exemplos:
 
 ```ruby
 
@@ -203,6 +204,7 @@ user = result.data
 user.class.name # => User
 ```
 
+____
  
 ## Hooks
 
@@ -218,7 +220,7 @@ Existem alguns hooks que podem auxiliar na chamadas das regras de negócio
 | before_rules     | antes de todas as regras         |
 | rescue_from      | captura uma exeção               |
 
-Exemplo
+Exemplos:
 ```ruby
 
 class UserCase < RuleBox::UseCase
@@ -252,6 +254,48 @@ use_case.exec name: 'José', email: 'jose@uouou.com.br'
 # [2020-07-29T08:09:00.212-03:00] executing of rule: Rules::SaveModel.
 # after
 # after all
+```
+
+### Capturando uma exceção com rescue_from
+
+Com o método hook **rescue_from** é possível capturar exeções.
+Este método pode ser chamado pela classe RuleBox::UseCase e quem herdar dela.
+Também pode ser invocado pelo o módulo RuleBox.
+
+
+#### UseCase
+Quando configurado no UseCase, a exceção será tratado apenas na própria classe.
+
+```ruby
+
+class UserCase < RuleBox::UseCase
+  # tratando com um block
+  rescue_from FirstException, FirstException, FirstException do |use_case|
+    # sua lógica aqui
+  end
+  
+  # or
+  
+  # tratando com um método, quando ocorrer uma exceção irá invocar o method da instância do UseCase
+  rescue_from StandardError, with: :handle_error
+  
+  def handle_error
+    # sua lógica aqui
+  end
+end
+
+```
+
+#### RuleBox
+Quando configurado no módulo RuleBox, todos as exceções serão tratadas no módulo.
+
+Para projeto Rails, crie um arquivo */config/initializers/rule_box.rb*
+```ruby
+
+# no módulo só é possível tratar com block
+RuleBox.rescue_from AnyException, StandardError do |use_case|
+    # sua lógica aqui
+end
 ```
 
 
