@@ -12,14 +12,7 @@ class StrategyProxy < RuleBox::Strategy
   end
 
   def perform(use_case, last_result)
-    last_result ||= _neutral_result
-    result = perform!(use_case, last_result)
-
-    if valid_result?(result)
-      result
-    else
-      last_result
-    end
+    perform!(use_case, last_result)
   end
 
   private
@@ -32,13 +25,8 @@ class StrategyProxy < RuleBox::Strategy
     when 1 then @strategy.perform(use_case)
     else @strategy.perform
     end
-  rescue Strategy::Stop => e
-    result = e.__result
-    result if valid_result? result
-  end
-
-  def valid_result?(result)
-    result.is_a? RuleBox::Result
+  rescue Strategy::ForcedStop => e
+    e.__result
   end
 
   class << self

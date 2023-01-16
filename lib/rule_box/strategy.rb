@@ -2,7 +2,7 @@
 
 module RuleBox
   class Strategy
-    class Stop < StandardError
+    class ForcedStop < StandardError
       attr_reader :__result
 
       def initialize(__result: nil)
@@ -22,25 +22,15 @@ module RuleBox
     private
 
     def stop(&block)
+      @stop = true
       block&.call
-      @stop
     end
 
     def stop!(&block)
       @stop = true
       result = block&.call
-      raise Stop.new(__result: result)
+      raise ForcedStop.new(__result: result)
     end
-
-    def turn
-      self.class::Result.new
-    end
-
-    def _neutral_result
-      turn.neutral.class.new
-    end
-
-    class Result; end
 
     class << self
       attr_reader :description
@@ -48,16 +38,6 @@ module RuleBox
       def desc(description)
         @description = description
       end
-
-      def map_result(method_name, result_class)
-        self::Result.define_method(method_name) do |result = nil, **args|
-          result_class.new(result, **args)
-        end
-      end
     end
-
-    map_result :neutral, RuleBox::Result::Neutral
-    map_result :success, RuleBox::Result::Success
-    map_result :error, RuleBox::Result::Error
   end
 end

@@ -30,6 +30,12 @@ module RuleBox
       hooks[name.to_sym].is_a? Proc
     end
 
+    def handling_for_exception?(exception)
+      rescue_handlers.any? do |class_error, _|
+        exception.is_a? class_error
+      end
+    end
+
     def rescue_from(*klasses, with: nil, &block)
       raise 'Must pass method name or block to handler the exception' if with.nil? && block.nil?
 

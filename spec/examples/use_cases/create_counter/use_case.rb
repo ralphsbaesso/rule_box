@@ -15,7 +15,7 @@ module CreateCounter
       factor = use_case.attr.factor
 
       counter.increment(value * factor)
-      stop! { turn.success(data: counter) } if counter.amount > 10
+      stop! { RuleBox::Result::Success.new(data: counter) } if counter.amount > 10
     end
   end
 

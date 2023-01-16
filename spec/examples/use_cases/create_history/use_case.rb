@@ -14,7 +14,7 @@ module CreateHistory
   class FinalStep < Strategy
     def perform(use_case)
       history = create_history use_case.attr.name, use_case.event
-      turn.success(data: history)
+      RuleBox::Result::Success.new(data: history)
     end
 
     private

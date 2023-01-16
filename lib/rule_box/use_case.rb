@@ -31,7 +31,7 @@ module RuleBox
       check_executed!
       @attributes = self.class::Attribute.new(**args)
       block&.call(bucket)
-      facade.perform
+      facade.perform self
     end
 
     def bucket
@@ -39,7 +39,7 @@ module RuleBox
     end
 
     def facade
-      @facade ||= self.class::Facade.new self
+      @facade ||= self.class::Facade.new
     end
 
     private
