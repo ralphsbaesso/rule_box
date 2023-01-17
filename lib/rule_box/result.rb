@@ -8,12 +8,10 @@ module RuleBox
   class Result
     attr_reader :data, :errors, :meta
 
-    def initialize(result = nil, data: nil, errors: nil, meta: nil)
+    def initialize(data: nil, errors: nil, meta: nil)
       @data = data
       @errors = errors
       @meta = meta
-
-      concat! result if result.is_a? RuleBox::Result
     end
 
     def instance_values
