@@ -90,7 +90,7 @@ use_case = UseCase.new # => 'Must be an "User"'
 
 # deve passar a dependência na criação do objeto
 user = User.new
-use_case = UserCase.new user: user
+use_case = UseCase.new user: user
 
 # pode acessar a dependência com o método "dependencies"
 use_case.dependencies.user # => User(clone)
@@ -103,7 +103,7 @@ use_case.dep.user # => User(clone)
 
 Crie um arquivo chamado *check_name.rb*.
 
-Nesta classe, ele deve herdar da classe Strategy e substituir seu método *process*.
+Nesta classe, ele deve herdar da classe Strategy e substituir seu método **perform**.
 
 Então, dentro desse método, insira sua lógica de regra de negócios.
 
@@ -111,7 +111,7 @@ Então, dentro desse método, insira sua lógica de regra de negócios.
 require 'rule_box/strategy'
 
 class CheckName < RuleBox::Strategy
-  def perform(use_case, result)
+  def perform(use_case, last_result)
     # sua lógica aqui
   end
 end
@@ -122,12 +122,32 @@ Existem alguns *helpers* na classe *Strategy* que irão ajudá-lo.
 ```ruby
 stop # para o cyclo de strategy 
 stop! # para o cyclo de strategy e a execução do código 
-turn.success # returna resultado de sucesso
-turn.error # returna resultado de erro
-turn.neutral # returna resultado imparcial
 ```
 
-Então, seu arquivo *check_name.rb* deverá ficar assim:
+O método perform pode ser implementado com 3 assinaturas
+1. Com 2 parâmetros
+```ruby
+def perform(use_case, last_result)
+  use_case # => o caso de uso
+  last_result # => o resultado da Strategy anterior
+end
+```
+
+2. Com 1 parâmetros
+```ruby
+def perform(use_case)
+  use_case # => o caso de uso
+end
+```
+
+3. Sem parâmetros
+```ruby
+def perform
+  # nenhum parâmetro
+end
+```
+
+Exemplos de **strategies**:
 
 ```ruby
 require 'rule_box/strategy'
@@ -135,51 +155,80 @@ require 'rule_box/strategy'
 class CheckName < Strategy
   def perform(use_case)
     name = use_case.attr.name
-  
-    turn.neutral(errors: ["Name can't be empty!"]) if name.nil? || name.to_s.empty?
+
+    use_case.errors << "Name can't be empty!" if name.nil? || name.to_s.empty?
   end
 end
-  
+
 class CheckEmail < Strategy
-  def perform(use_case, result)
+  def perform(use_case)
     email = use_case.attr.email
-  
-    unless email =~ URI::MailTo::EMAIL_REGEXP
-      turn.neutral(result, errors: ['Invalid email!'])
-    end
+
+    use_case.errors << 'Invalid email!' unless email =~ URI::MailTo::EMAIL_REGEXP
   end
 end
-  
+
 class Create < Strategy
-  def perform(use_case, result)
-    errors = result.errors
-    return turn.error(result) unless errors.nil? || errors.empty?
-  
+  def perform(use_case)
+    return RuleBox::Result::Error.new(errors: use_case.errors) unless use_case.errors.empty?
+
     user = User.new
     user.name = use_case.attr.name
     user.email = use_case.attr.email
     RepositoryUser.save(user)
-  
-    turn.success(data: user) 
-  end 
+
+    RuleBox::Result::Success.new(data: user)
+  end
 end
 ```
 
-#### 3. Invocar o Caso de Uso
+#### Retorno do Strategy
+Quando é executado um UseCase, o resultado setá o retorno da última Strategy
 
+Esta gem fornece classes para tratar resultados, mas não é obrigatório utiliza-las.
+Nos exemplos serão utilizadas as classes que herdam de RuleBox::Result
+
+### RuleBox::Result
+São classes especiais para tratar os resultados
+```ruby
+error_result = RuleBox::Result::Error.new(errors: ['any error'])
+error_result.status # => "error"
+error_result.data # => nil
+error_result.meta # => nil
+error_result.errors # => ["any error"]
+
+success_result = RuleBox::Result::Success.new(data: { value: 134}, meta: { time: '0.1 s' })
+success_result.status # => "ok"
+success_result.data # => { value: 134 }
+success_result.meta # => { time: "0.1 s" }
+success_result.errors # => nil
+```
+
+
+#### 3. Invocar o Caso de Uso
 
 Deve invocar o caso de uso com o métod *exec*. Irá retornar um objeto do tipo RuleBox::Result
 ```ruby
 use_case = UseCase.new
 result = use_case.exec(name: 'Raulzito', email: 'raulzito@maluco.beleza')
 
-result.class.name # => RuleBox::Result::Neutral ou RuleBox::Result::Error ou RuleBox::Result::Error
-                  # ou pode retornar qualquer objeto que herda de RuleBox::Result
+result.class.name # => RuleBox::Result::Error
 ```
 
 Exemplos:
 
 ```ruby
+class UseCase < RuleBox::UseCase
+  attributes :name, :email
+
+  rules CheckName,
+        CheckEmail,
+        Create
+  
+  def errors
+    @errors ||= []
+  end
+end
 
 use_case = UseCase.new
 result = use_case.exec
@@ -187,7 +236,6 @@ result = use_case.exec
 result.class.name # => RuleBox::Result::Error
 result.status # => 'error'
 result.errors # => ["Name can't be empty!", "Invalid email!"]
-
 
 use_case = UseCase.new
 result = use_case.exec name: 'my_name', email: '_invalid_email_'
@@ -297,6 +345,9 @@ RuleBox.rescue_from AnyException, StandardError do |use_case|
     # sua lógica aqui
 end
 ```
+
+### Exemplos
+Mais exemplos em [examples](spec/examples)
 
 
 ## License
