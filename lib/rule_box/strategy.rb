@@ -38,6 +38,10 @@ module RuleBox
       def desc(description)
         @description = description
       end
+
+      def description
+        @description ||= name.gsub(/([A-Z][a-z])/) { |target| " #{target.downcase}" }.strip
+      end
     end
   end
 end

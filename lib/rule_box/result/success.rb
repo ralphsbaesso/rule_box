@@ -6,11 +6,6 @@ module RuleBox
       def status
         'ok'
       end
-
-      def concat!(result)
-        _concat_meta!(result.meta)
-        _concat_data!(result.data)
-      end
     end
   end
 end

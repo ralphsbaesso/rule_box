@@ -9,9 +9,9 @@ module RuleBox
     attr_reader :data, :errors, :meta
 
     def initialize(data: nil, errors: nil, meta: nil)
-      @data = data
-      @errors = errors
-      @meta = meta
+      @data = data.clone
+      @errors = errors.clone
+      @meta = meta.clone
     end
 
     def instance_values
@@ -27,8 +27,13 @@ module RuleBox
       raise 'Must implement this method!'
     end
 
-    def concat!(_result)
-      raise 'Must implement this method!'
+    def concat!(result, skips: nil)
+      skips = [skips] unless skips.is_a?(Array)
+      skips = skips.map(&:to_s)
+
+      _concat_meta!(result.meta) unless skips.include? 'meta'
+      _concat_data!(result.data) unless skips.include? 'data'
+      _concat_errors!(result.errors) unless skips.include? 'errors'
     end
 
     def _concat_data!(data)

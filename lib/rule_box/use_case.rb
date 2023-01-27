@@ -47,7 +47,7 @@ module RuleBox
 
     class << self
       def attributes(*names)
-        names = names.map(&:to_s)
+        names = names.map(&:to_sym)
         self::Attribute.instance_variable_set(:@attribute_names, self::Attribute.names + names)
         self::Attribute.attr_accessor(*names)
       end

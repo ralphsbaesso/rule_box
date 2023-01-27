@@ -42,7 +42,7 @@ GEM
     rubocop-ast (1.17.0)
       parser (>= 3.1.1.0)
     ruby-progressbar (1.11.0)
-    simplecov (0.21.2)
+    simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
       simplecov_json_formatter (~> 0.1)
@@ -59,7 +59,7 @@ DEPENDENCIES
   rspec (~> 3.0)
   rubocop (~> 1.28, >= 1.28.2)
   rule_box!
-  simplecov (~> 0.21.2)
+  simplecov (~> 0.22.0)
 
 BUNDLED WITH
    2.3.13
