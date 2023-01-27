@@ -27,15 +27,10 @@ module RuleBox
            .downcase
     end
 
-    def exec(**args, &block)
+    def exec(**args)
       check_executed!
       @attributes = self.class::Attribute.new(**args)
-      block&.call(bucket)
       facade.perform self
-    end
-
-    def bucket
-      @bucket ||= {}
     end
 
     def facade

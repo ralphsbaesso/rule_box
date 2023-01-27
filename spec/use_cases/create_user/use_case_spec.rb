@@ -63,7 +63,8 @@ RSpec.describe CreateUser::UseCase do
       email = 'john@rule.box.com'
 
       use_case = CreateUser::UseCase.new
-      result = use_case.exec(name: name, email: email) { |bucket| bucket[:throw_error] = true }
+      use_case.throw_error = true
+      result = use_case.exec name: name, email: email
 
       expect(result).to be_a(RuleBox::Result)
       expect(result.status).to eq('error')

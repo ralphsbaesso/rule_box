@@ -19,7 +19,7 @@ module CreateUser
 
   class CheckThrowAnyError < Strategy
     def perform(use_case)
-      raise ThrowAnyError if use_case.bucket[:throw_error]
+      raise ThrowAnyError if use_case.throw_error
     end
   end
 
@@ -39,6 +39,7 @@ module CreateUser
 
   class UseCase < UseCaseBase
     attributes :name, :email
+    attr_accessor :throw_error
 
     rules CheckName,
           CheckEmail,
