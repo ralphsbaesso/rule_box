@@ -15,6 +15,10 @@ module RuleBox
         self.class.dependencies.keys
       end
 
+      def self.dependencies
+        @dependencies ||= {}
+      end
+
       private
 
       def check_dependencies!(arg_dependencies)
@@ -34,10 +38,6 @@ module RuleBox
         block&.call(args[key])
       rescue StandardError => e
         e.message
-      end
-
-      def self.dependencies
-        @dependencies ||= {}
       end
     end
   end

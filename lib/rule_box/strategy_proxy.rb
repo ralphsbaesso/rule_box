@@ -5,6 +5,8 @@ module RuleBox
     attr_reader :exception
 
     def initialize(strategy)
+      super()
+
       @strategy = strategy
     end
 
@@ -29,7 +31,9 @@ module RuleBox
     class << self
       private
 
-      def inherited(_sub)
+      def inherited(sub)
+        super
+
         raise 'This class should not be extended!'
       end
     end

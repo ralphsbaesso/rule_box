@@ -26,7 +26,7 @@ module RuleBox
       @hooks = {}
     end
 
-    def has_hook?(name)
+    def hook?(name)
       hooks[name.to_sym].is_a? Proc
     end
 

@@ -5,9 +5,9 @@ module RuleBox
     class ForcedStop < StandardError
       attr_reader :__result
 
-      def initialize(__result: nil)
+      def initialize(result: nil)
         super()
-        @__result = __result
+        @__result = result
       end
     end
 
@@ -29,12 +29,10 @@ module RuleBox
     def stop!(&block)
       @stop = true
       result = block&.call
-      raise ForcedStop.new(__result: result)
+      raise ForcedStop.new(result: result)
     end
 
     class << self
-      attr_reader :description
-
       def desc(description)
         @description = description
       end

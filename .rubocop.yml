@@ -1,0 +1,37 @@
+Metrics/LineLength:
+  Enabled: false
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - spec/rule_box/strategy_proxy_spec.rb
+Style/Documentation:
+  Enabled: false
+Style/AsciiComments:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Style/GuardClause:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Metrics/ModuleLength:
+ Enabled: false
+Style/RedundantSelf:
+  Enabled: false
+Style/HashSyntax:
+  EnforcedShorthandSyntax: never
+Lint/RescueException:
+  Exclude:
+    - lib/rule_box/use_case/facade.rb
+AllCops:
+  SuggestExtensions: false

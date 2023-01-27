@@ -61,7 +61,7 @@ module RuleBox
       def execute_all(use_case)
         hooks(use_case).each { |h| h.call_hook(:before_rules, use_case) }
 
-        if hooks(use_case).any? { |h| h.has_hook? :around_rules }
+        if hooks(use_case).any? { |h| h.hook? :around_rules }
           around :around_rules, :execute_strategies, use_case
         else
           execute_strategies(use_case)
@@ -72,7 +72,7 @@ module RuleBox
       def execute_one(use_case)
         hooks(use_case).each { |h| h.call_hook(:before_rule, use_case) }
 
-        if hooks(use_case).any? { |h| h.has_hook? :around_rule }
+        if hooks(use_case).any? { |h| h.hook? :around_rule }
           around :around_rule, :execute_strategy, use_case
         else
           execute_strategy(use_case)
