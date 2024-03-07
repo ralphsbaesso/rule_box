@@ -10,7 +10,7 @@ RSpec.describe CreateHistory::UseCase do
     use_case = CreateHistory::UseCase.new admin: admin
     result = use_case.exec name: name
 
-    expect(result).to be_a(RuleBox::Result)
+    expect(result).to be_a(RuleBox::UseCase::Output)
     expect(result.status).to eq('ok')
 
     history = result.data
@@ -28,7 +28,7 @@ RSpec.describe CreateHistory::UseCase do
   context 'with exception' do
     before do
       RuleBox.rescue_from Exception do |use_case|
-        RuleBox::Result::Error.new(errors: ['Oops!'], data: use_case)
+        use_case.new_output!(errors: ['Oops!'], status: :error)
       end
     end
 
@@ -44,7 +44,7 @@ RSpec.describe CreateHistory::UseCase do
       use_case = CreateHistory::UseCase.new admin: admin
       result = use_case.exec name: name
 
-      expect(result).to be_a(RuleBox::Result)
+      expect(result).to be_a(RuleBox::UseCase::Output)
       expect(result.status).to eq('error')
       expect(result.errors).to eq(['Oops!'])
     end

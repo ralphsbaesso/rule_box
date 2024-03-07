@@ -10,8 +10,8 @@ RSpec.describe CreateUser::UseCase do
     use_case = CreateUser::UseCase.new
     result = use_case.exec name: name, email: email
 
-    expect(result).to be_a(RuleBox::Result)
-    expect(result.status).to eq('ok')
+    expect(result).to be_a(CreateUser::UseCase::Output)
+    expect(result.status).to eq('success')
 
     user = result.data
     expect(user).to be_an(User)
@@ -27,9 +27,9 @@ RSpec.describe CreateUser::UseCase do
       use_case = CreateUser::UseCase.new
       result = use_case.exec name: name, email: email
 
-      expect(result).to be_a(RuleBox::Result)
+      expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.errors).to eq(["Name can't be empty!"])
+      expect(result.messages).to eq(["Name can't be empty!"])
     end
 
     it 'must return "Invalid email!"' do
@@ -39,9 +39,9 @@ RSpec.describe CreateUser::UseCase do
       use_case = CreateUser::UseCase.new
       result = use_case.exec name: name, email: email
 
-      expect(result).to be_a(RuleBox::Result)
+      expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Invalid email!'])
+      expect(result.messages).to eq(['Invalid email!'])
     end
 
     it 'must return two error messages' do
@@ -51,9 +51,9 @@ RSpec.describe CreateUser::UseCase do
       use_case = CreateUser::UseCase.new
       result = use_case.exec name: name, email: email
 
-      expect(result).to be_a(RuleBox::Result)
+      expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.errors.size).to eq(2)
+      expect(result.messages.size).to eq(2)
     end
   end
 
@@ -66,9 +66,9 @@ RSpec.describe CreateUser::UseCase do
       use_case.throw_error = true
       result = use_case.exec name: name, email: email
 
-      expect(result).to be_a(RuleBox::Result)
+      expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Oops, something went wrong!'])
+      expect(result.messages).to eq(['Oops, something went wrong!'])
     end
   end
 end

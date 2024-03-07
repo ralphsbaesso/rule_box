@@ -6,7 +6,7 @@ RSpec.describe RuleBox::Mapper do
   context '.strategies' do
     it 'Show strategies by class' do
       strategies = CreateUser::UseCase.strategies
-      expect(strategies.count).to eq(4)
+      expect(strategies.count).to eq(5)
     end
   end
 end

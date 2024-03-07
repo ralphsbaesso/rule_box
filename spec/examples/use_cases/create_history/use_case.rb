@@ -13,8 +13,8 @@ module CreateHistory
 
   class FinalStep < Strategy
     def perform(use_case)
-      history = create_history use_case.attr.name, use_case.event
-      RuleBox::Result::Success.new(data: history)
+      history = create_history use_case.input.name, use_case.event
+      use_case.output.data = history
     end
 
     private
@@ -28,7 +28,9 @@ module CreateHistory
   end
 
   class UseCase < UseCaseAdmin
-    attributes :name
+    inputs :name
+    outputs :data, :errors
+    output :status, default: :ok, callback: ->(v) { v.to_s }
     attr_accessor :history
 
     rules FirstStep,

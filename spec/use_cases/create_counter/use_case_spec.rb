@@ -10,7 +10,7 @@ RSpec.describe CreateCounter::UseCase do
     use_case = CreateCounter::UseCase.new
     result = use_case.exec value: value, factor: factor
 
-    expect(result).to be_a(RuleBox::Result)
+    expect(result).to be_a(RuleBox::UseCase::Output)
     expect(result.status).to eq('ok')
 
     counter = result.data
@@ -27,7 +27,7 @@ RSpec.describe CreateCounter::UseCase do
     use_case = CreateCounter::UseCase.new
     result = use_case.exec value: value, factor: factor
 
-    expect(result).to be_a(RuleBox::Result)
+    expect(result).to be_a(RuleBox::UseCase::Output)
     expect(result.status).to eq('ok')
 
     counter = result.data

@@ -1,21 +1,23 @@
 # frozen_string_literal: true
 
-require_relative 'use_case/attribute'
+require_relative 'use_case/input'
 require_relative 'use_case/dependency'
 require_relative 'use_case/facade'
+require_relative 'use_case/output'
 
 module RuleBox
   class UseCase
     extend RuleBox::ExecutionHook
     extend RuleBox::Mapper
 
-    attr_reader :attributes, :executed, :dependencies
-    alias attr attributes
+    attr_reader :input, :output, :executed, :dependencies
+    alias i input
     alias executed? executed
     alias dep dependencies
+    alias o output
 
     def initialize(**args)
-      @dependencies = self.class::Dependency.new(**args)
+      @dependencies = dependency_class.new(**args)
     end
 
     def to_s
@@ -29,12 +31,15 @@ module RuleBox
 
     def exec(**args)
       check_executed!
-      @attributes = self.class::Attribute.new(**args)
+      @input = input_class.new(**args)
+      @output = output_class.new
+      facade = facade_class.new
       facade.perform self
+      output
     end
 
-    def facade
-      @facade ||= self.class::Facade.new
+    def new_output!(**args)
+      @output = output_class.new(**args)
     end
 
     private
@@ -45,18 +50,41 @@ module RuleBox
       @executed = true
     end
 
+    def dependency_class
+      self.class::Dependency
+    end
+
+    def input_class
+      self.class::Input
+    end
+
+    def facade_class
+      self.class::Facade
+    end
+
+    def output_class
+      self.class::Output
+    end
+
     class << self
-      def attributes(*names)
-        names = names.map(&:to_sym)
-        self::Attribute.instance_variable_set(:@attribute_names, self::Attribute.names + names)
-        self::Attribute.attr_accessor(*names)
+      def add_dependency(name, default: nil, optional: false, **options, &validate)
+        self::Dependency.add_dependency(name, default: default, optional: optional, **options, &validate)
       end
 
-      def add_dependency(key, &block)
-        self::Dependency.dependencies[key.to_sym] = block
-        self::Dependency.define_method(key) do
-          instance_variable_get("@#{key}").clone
-        end
+      def input(name, **options)
+        self::Input.data_accessor name, **options
+      end
+
+      def inputs(*names)
+        names.each { |name| input(name) }
+      end
+
+      def output(name, **options, &callback)
+        self::Output.data_accessor name, **options, &callback
+      end
+
+      def outputs(*names)
+        names.each { |name| output(name) }
       end
 
       private
@@ -65,23 +93,22 @@ module RuleBox
         super
 
         class_eval <<~M, __FILE__, __LINE__ + 1
-          class ::#{sub}::Attribute < #{self}::Attribute
-            def self.attribute_names
-              @attribute_names ||= #{self}::Attribute.names
-            end
-          end
-        M
-
-        class_eval <<~M, __FILE__, __LINE__ + 1
-          class ::#{sub}::Dependency < #{self}::Dependency
-            def self.dependencies
-              @dependencies ||= #{self}::Dependency.dependencies.clone
-            end
-          end
+          class ::#{sub}::Dependency < #{self}::Dependency; end
+          ::#{sub}::Input.instance_variable_set(:@dependencies, #{self}::Input.schema)
         M
 
         class_eval <<~M, __FILE__, __LINE__ + 1
           class ::#{sub}::Facade < #{self}::Facade; end
+        M
+
+        class_eval <<~M, __FILE__, __LINE__ + 1
+          class ::#{sub}::Input < #{self}::Input; end
+          ::#{sub}::Input.instance_variable_set(:@__data, #{self}::Input.schema)
+        M
+
+        class_eval <<~M, __FILE__, __LINE__ + 1
+          class ::#{sub}::Output < #{self}::Output; end
+          ::#{sub}::Output.instance_variable_set(:@__data, #{self}::Output.schema)
         M
       end
     end

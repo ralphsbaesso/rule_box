@@ -11,11 +11,11 @@ module CreateCounter
   class StrategyBase < Strategy
     def perform(use_case, _)
       counter = use_case.counter
-      value = use_case.attr.value
-      factor = use_case.attr.factor
+      value = use_case.input.value
+      factor = use_case.input.factor
 
       counter.increment(value * factor)
-      stop! { RuleBox::Result::Success.new(data: counter) } if counter.amount > 10
+      stop! { use_case.new_output!(status: 'ok', data: counter) } if counter.amount > 10
     end
   end
 
@@ -24,7 +24,8 @@ module CreateCounter
   class ThirdStep < StrategyBase; end
 
   class UseCase < UseCaseBase
-    attributes :value, :factor
+    inputs :value, :factor
+    outputs :data, :errors, :meta, :status
     attr_accessor :counter
 
     rules Create,

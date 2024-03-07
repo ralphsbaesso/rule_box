@@ -12,7 +12,7 @@ RSpec.describe CreateBook::UseCase do
     use_case = CreateBook::UseCase.new user: user
     result = use_case.exec name: name, code: code
 
-    expect(result).to be_a(RuleBox::Result)
+    expect(result).to be_a(RuleBox::UseCase::Output)
     expect(result.status).to eq('ok')
 
     book = result.data

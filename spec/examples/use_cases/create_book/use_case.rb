@@ -3,10 +3,10 @@
 module CreateBook
   class CheckCode < Strategy
     def perform(use_case)
-      code = use_case.attr.code
+      code = use_case.input.code
       return unless code.nil?
 
-      stop { RuleBox::Result::Error.new(errors: ['Invalid code.']) }
+      stop { use_case.new_output!(status: 'error', errors: ['Invalid code.']) }
     end
   end
 
@@ -14,22 +14,23 @@ module CreateBook
     def perform(use_case)
       return if use_case.dep.user.is_a? User
 
-      stop { RuleBox::Result::Error.new(errors: ['"owner" must be an User!']) }
+      stop { use_case.new_output!(status: 'error', errors: ['"owner" must be an User!']) }
     end
   end
 
   class Create < Strategy
     def perform(use_case)
       book = Book.new
-      book.name = use_case.attr.name
-      book.code = use_case.attr.code
+      book.name = use_case.input.name
+      book.code = use_case.input.code
 
-      RuleBox::Result::Success.new(data: book)
+      use_case.new_output!(status: 'ok', data: book)
     end
   end
 
   class UseCase < UseCaseBase
-    attributes :name, :code
+    inputs :name, :code
+    outputs :data, :errors, :status
 
     add_dependency :user do |value|
       'Must be an "User"' unless value.is_a? User
