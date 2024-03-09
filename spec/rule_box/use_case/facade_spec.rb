@@ -7,7 +7,7 @@ RSpec.describe RuleBox::UseCase::Facade do
         facade = RuleBox::UseCase::Facade.new
         expect(facade.instance_values).to be_a(Hash)
         expect(facade.instance_values.keys)
-          .to include(:current_strategy, :strategies, :exception, :result, :steps)
+          .to include(:current_strategy, :strategies, :exception, :last_result, :steps)
       end
     end
 

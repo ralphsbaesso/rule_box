@@ -33,8 +33,8 @@ module RuleBox
       check_executed!
       @input = input_class.new(**args)
       @output = output_class.new
-      facade = facade_class.new
-      facade.perform self
+      @facade = facade_class.new
+      @facade.perform self
       output
     end
 

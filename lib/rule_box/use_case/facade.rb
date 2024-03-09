@@ -3,7 +3,7 @@
 module RuleBox
   class UseCase
     class Facade
-      attr_reader :exception, :strategies, :current_strategy, :result
+      attr_reader :exception, :strategies, :current_strategy, :last_result
 
       def initialize
         @steps = []
@@ -14,7 +14,6 @@ module RuleBox
         add_step "initialize { use_case: #{use_case.class.name}, rules: #{@strategies.count} }"
         execute_all(use_case)
         resolve_exception!(use_case)
-        return_result
       end
 
       def instance_values
@@ -23,7 +22,7 @@ module RuleBox
           strategies: (@strategies || []).map(&:instance_values)
         }
 
-        %i[exception result steps].each do |key|
+        %i[exception last_result steps].each do |key|
           hash[key] = send(key).clone
         end
 
@@ -105,7 +104,7 @@ module RuleBox
         add_step "executing of rule: #{current_strategy.class.name}."
 
         proxy = StrategyProxy.new(current_strategy)
-        @result = proxy.perform use_case, result
+        @last_result = proxy.perform use_case, last_result
       end
 
       def hooks(use_case)
@@ -118,21 +117,16 @@ module RuleBox
         @strategies = class_strategies.map(&:new)
       end
 
-      def return_result
-        result
-      end
-
       def resolve_exception!(use_case)
         return unless @exception.is_a?(Exception)
 
-        @result =
-          if use_case.class.handling_for_exception?(@exception)
-            use_case.class.resolve_exception!(@exception, use_case)
-          elsif RuleBox.handling_for_exception?(@exception)
-            RuleBox.resolve_exception!(@exception, use_case)
-          else
-            raise @exception
-          end
+        if use_case.class.handling_for_exception?(@exception)
+          use_case.class.resolve_exception!(@exception, use_case)
+        elsif RuleBox.handling_for_exception?(@exception)
+          RuleBox.resolve_exception!(@exception, use_case)
+        else
+          raise @exception
+        end
       end
     end
   end
