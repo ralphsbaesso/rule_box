@@ -2,6 +2,8 @@
 
 module RuleBox
   class Strategy
+    extend RuleBox::Describe
+
     class ForcedStop < StandardError
       attr_reader :__result
 
@@ -30,16 +32,6 @@ module RuleBox
       @stop = true
       result = block&.call
       raise ForcedStop.new(result: result)
-    end
-
-    class << self
-      def desc(description)
-        @description = description
-      end
-
-      def description
-        @description ||= name.gsub(/([A-Z][a-z])/) { |target| " #{target.downcase}" }.strip
-      end
     end
   end
 end

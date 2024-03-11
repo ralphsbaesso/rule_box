@@ -7,6 +7,7 @@ require_relative 'use_case/output'
 
 module RuleBox
   class UseCase
+    extend RuleBox::Describe
     extend RuleBox::ExecutionHook
     extend RuleBox::Mapper
 
@@ -40,6 +41,10 @@ module RuleBox
 
     def new_output!(**args)
       @output = output_class.new(**args)
+    end
+
+    def schema
+      self.class.schema
     end
 
     private
@@ -85,6 +90,14 @@ module RuleBox
 
       def outputs(*names)
         names.each { |name| output(name) }
+      end
+
+      def schema
+        {
+          'description' => description,
+          'inputs' => self::Input.schema,
+          'outputs' => self::Output.schema
+        }
       end
 
       private

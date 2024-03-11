@@ -4,6 +4,7 @@ require 'time'
 require 'json'
 
 require 'rule_box/data'
+require 'rule_box/describe'
 require 'rule_box/execution_hook'
 require 'rule_box/result'
 require 'rule_box/mapper'
