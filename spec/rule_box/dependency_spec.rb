@@ -10,6 +10,18 @@ class TestDependency < RuleBox::UseCase::Dependency
   end
 end
 
+module Code
+  class CheckCode < RuleBox::UseCase
+    add_dependency :code do |c|
+      'c deve ser número' unless c.is_a?(Numeric)
+    end
+  end
+
+  class CheckTopCode < CheckCode
+    add_dependency :top_code
+  end
+end
+
 RSpec.describe RuleBox::UseCase::Dependency do
   context 'instance methods' do
     context '#schema' do
@@ -50,6 +62,24 @@ RSpec.describe RuleBox::UseCase::Dependency do
         expect do
           TestDependency.new(code: '456', owner: 'Raul')
         end.to raise_error('owner should be a Hash')
+      end
+    end
+  end
+
+  describe 'with UseCase' do
+    describe '#check_dependency!' do
+      it 'without arguments' do
+        expect do
+          Code::CheckCode.new
+        end.to raise_error(/missing keyword: code/)
+      end
+
+      describe 'with hierarchy' do
+        it 'without arguments' do
+          expect do
+            Code::CheckTopCode.new
+          end.to raise_error(/(missing keyword: code)/)
+        end
       end
     end
   end

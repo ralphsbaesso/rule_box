@@ -107,7 +107,8 @@ module RuleBox
 
         class_eval <<~M, __FILE__, __LINE__ + 1
           class ::#{sub}::Dependency < #{self}::Dependency; end
-          ::#{sub}::Input.instance_variable_set(:@dependencies, #{self}::Input.schema)
+          ::#{sub}::Dependency.instance_variable_set(:@dependencies, #{self}::Dependency.send(:dependencies).clone)
+          ::#{sub}::Dependency.instance_variable_set(:@validations, #{self}::Dependency.send(:validations).clone)
         M
 
         class_eval <<~M, __FILE__, __LINE__ + 1
