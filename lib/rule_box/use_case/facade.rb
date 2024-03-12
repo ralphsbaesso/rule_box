@@ -3,7 +3,7 @@
 module RuleBox
   class UseCase
     class Facade
-      attr_reader :exception, :strategies, :current_strategy, :last_result
+      attr_reader :current_strategy, :exception, :facade, :last_result, :strategies
 
       def initialize
         @steps = []
@@ -22,8 +22,8 @@ module RuleBox
           strategies: (@strategies || []).map(&:instance_values)
         }
 
-        %i[exception last_result steps].each do |key|
-          hash[key] = send(key).clone
+        %i[exception facade last_result steps].each do |key|
+          hash[key] = send(key)
         end
 
         hash
@@ -44,6 +44,7 @@ module RuleBox
         hooks(use_case).each do |hook|
           hook.call_hook(around_method, use_case) do
             send(current_method, use_case)
+            @exception
           end
         end
       end
