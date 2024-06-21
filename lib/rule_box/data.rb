@@ -4,8 +4,7 @@ module RuleBox
   class Data
     include Enumerable
     def initialize(**args)
-      init_data!(args)
-      init_default_data!
+      init_data!(args.transform_keys(&:to_s))
     end
 
     def each(&block)
@@ -30,18 +29,12 @@ module RuleBox
     private
 
     def init_data!(args)
-      args.each do |key, value|
-        key = "#{key}="
-        send(key, value) if respond_to? key
-      end
-    end
-
-    def init_default_data!
       schema.each do |key, options|
-        next unless send(key).nil?
-        next if options['default'].nil?
-
-        send("#{key}=", options['default'].clone)
+        if args.key?(key)
+          send("#{key}=", args[key])
+        elsif !options['default'].nil?
+          send("#{key}=", options['default'].clone)
+        end
       end
     end
 
@@ -58,15 +51,14 @@ module RuleBox
     end
 
     class << self
-      def data_accessor(name, default: nil, callback: nil, **options)
-        __data[name.to_s] = options.transform_keys(&:to_s).merge('default' => default).compact
+      def data_accessor(name, default: nil, **options, &callback)
+        options = options.transform_keys(&:to_s)
+        callback = options.delete('callback') if options['callback'].is_a?(Proc)
+        setter = "#{name}="
+        __data[name.to_s] = options.merge('default' => default).compact
         define_method(name) { read_attribute name }
-        define_method("#{name}=") { |value| write_attribute(name, callback ? callback.call(value) : value) }
-      end
-
-      def alias_attribute(new_name, old_name)
-        define_method(new_name) { read_attribute old_name }
-        define_method("#{new_name}=") { |value| write_attribute(old_name, value) }
+        define_method(setter) { |value| write_attribute(name, callback ? callback.call(value) : value) }
+        instance_eval { private setter } if __private_data?
       end
 
       def schema
@@ -74,6 +66,10 @@ module RuleBox
       end
 
       private
+
+      def __private_data?
+        true
+      end
 
       def __data
         @__data ||= {}

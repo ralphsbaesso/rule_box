@@ -27,7 +27,7 @@ module CreateUser
     def perform(use_case, _result)
       unless use_case.errors.empty?
         use_case.new_output!(
-          messages: use_case.errors,
+          errors: use_case.errors,
           status: 'error'
         )
         return
@@ -51,7 +51,7 @@ module CreateUser
 
   class UseCase < UseCaseBase
     inputs :name, :email
-    outputs :data, :status, :messages
+    outputs :data, :status, :errors
     attr_accessor :throw_error
 
     rules CheckName,
@@ -71,8 +71,6 @@ module CreateUser
     end
 
     class Output
-      alias_attribute :errors, :messages
-
       def status
         status = read_attribute :status
         status&.to_s

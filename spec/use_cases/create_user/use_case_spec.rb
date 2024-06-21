@@ -29,7 +29,7 @@ RSpec.describe CreateUser::UseCase do
 
       expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.messages).to eq(["Name can't be empty!"])
+      expect(result.errors).to eq(["Name can't be empty!"])
     end
 
     it 'must return "Invalid email!"' do
@@ -41,7 +41,7 @@ RSpec.describe CreateUser::UseCase do
 
       expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.messages).to eq(['Invalid email!'])
+      expect(result.errors).to eq(['Invalid email!'])
     end
 
     it 'must return two error messages' do
@@ -53,7 +53,7 @@ RSpec.describe CreateUser::UseCase do
 
       expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.messages.size).to eq(2)
+      expect(result.errors.size).to eq(2)
     end
   end
 
@@ -68,7 +68,7 @@ RSpec.describe CreateUser::UseCase do
 
       expect(result).to be_a(CreateUser::UseCase::Output)
       expect(result.status).to eq('error')
-      expect(result.messages).to eq(['Oops, something went wrong!'])
+      expect(result.errors).to eq(['Oops, something went wrong!'])
     end
   end
 end

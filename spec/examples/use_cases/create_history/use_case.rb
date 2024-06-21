@@ -30,7 +30,7 @@ module CreateHistory
   class UseCase < UseCaseAdmin
     inputs :name
     outputs :data, :errors
-    output :status, default: :ok, callback: ->(v) { v.to_s }
+    output :status, default: :ok, &->(v) { v.to_s }
     attr_accessor :history
 
     rules FirstStep,
