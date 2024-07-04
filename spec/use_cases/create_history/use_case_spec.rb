@@ -8,12 +8,12 @@ RSpec.describe CreateHistory::UseCase do
     name = 'history_name'
 
     use_case = CreateHistory::UseCase.new admin: admin
-    result = use_case.exec name: name
+    output = use_case.exec name: name
 
-    expect(result).to be_a(RuleBox::UseCase::Output)
-    expect(result.status).to eq('ok')
+    expect(output).to be_a(Hash)
+    expect(output[:status]).to eq('ok')
 
-    history = result.data
+    history = output[:data]
     expect(history).to be_an(History)
     expect(history.name).to eq(name)
 
@@ -42,11 +42,11 @@ RSpec.describe CreateHistory::UseCase do
       name = 'history_name'
 
       use_case = CreateHistory::UseCase.new admin: admin
-      result = use_case.exec name: name
+      output = use_case.exec name: name
 
-      expect(result).to be_a(RuleBox::UseCase::Output)
-      expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Oops!'])
+      expect(output).to be_a(Hash)
+      expect(output[:status]).to eq('error')
+      expect(output[:errors]).to eq(['Oops!'])
     end
   end
 end

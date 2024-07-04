@@ -10,12 +10,12 @@ RSpec.describe CreateBook::UseCase do
     code = '123456'
 
     use_case = CreateBook::UseCase.new user: user
-    result = use_case.exec name: name, code: code
+    output = use_case.exec name: name, code: code
 
-    expect(result).to be_a(RuleBox::UseCase::Output)
-    expect(result.status).to eq('ok')
+    expect(output).to be_a(Hash)
+    expect(output[:status]).to eq('ok')
 
-    book = result.data
+    book = output[:data]
     expect(book).to be_an(Book)
     expect(book.name).to eq(name)
     expect(book.code).to eq(code)
@@ -27,10 +27,10 @@ RSpec.describe CreateBook::UseCase do
       code = nil
 
       use_case = CreateBook::UseCase.new user: user
-      result = use_case.exec name: name, code: code
+      output = use_case.exec name: name, code: code
 
-      expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Invalid code.'])
+      expect(output[:status]).to eq('error')
+      expect(output[:errors]).to eq(['Invalid code.'])
     end
   end
 end

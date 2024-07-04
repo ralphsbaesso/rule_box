@@ -8,8 +8,8 @@ RSpec.describe CreateAccumulator::UseCase do
     output = use_case.exec initial_value: 1,
                            sum: 2
 
-    expect(output).to be_a(RuleBox::UseCase::Output)
-    result = output.result
+    expect(output).to be_a(Hash)
+    result = output[:result]
     expect(result).to be_a(Numeric)
     expect(result).to eq(3)
   end
@@ -20,8 +20,8 @@ RSpec.describe CreateAccumulator::UseCase do
                            sum: 10,
                            subtraction: 5
 
-    expect(output).to be_a(RuleBox::UseCase::Output)
-    result = output.result
+    expect(output).to be_a(Hash)
+    result = output[:result]
     expect(result).to eq(15)
   end
 
@@ -33,8 +33,8 @@ RSpec.describe CreateAccumulator::UseCase do
                            multiplication: 2,
                            division: 9
 
-    expect(output).to be_a(RuleBox::UseCase::Output)
-    result = output.result
+    expect(output).to be_a(Hash)
+    result = output[:result]
     expect(result).to eq(20)
   end
 end

@@ -8,12 +8,12 @@ RSpec.describe CreateCounter::UseCase do
     factor = 3
 
     use_case = CreateCounter::UseCase.new
-    result = use_case.exec value: value, factor: factor
+    output = use_case.exec value: value, factor: factor
 
-    expect(result).to be_a(RuleBox::UseCase::Output)
-    expect(result.status).to eq('ok')
+    expect(output).to be_a(Hash)
+    expect(output[:status]).to eq('ok')
 
-    counter = result.data
+    counter = output[:data]
     expect(counter).to be_an(Counter)
 
     expect(counter.step).to eq(2)
@@ -25,12 +25,12 @@ RSpec.describe CreateCounter::UseCase do
     factor = 3
 
     use_case = CreateCounter::UseCase.new
-    result = use_case.exec value: value, factor: factor
+    output = use_case.exec value: value, factor: factor
 
-    expect(result).to be_a(RuleBox::UseCase::Output)
-    expect(result.status).to eq('ok')
+    expect(output).to be_a(Hash)
+    expect(output[:status]).to eq('ok')
 
-    counter = result.data
+    counter = output[:data]
     expect(counter).to be_an(Counter)
 
     expect(counter.step).to eq(1)
