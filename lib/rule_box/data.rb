@@ -26,6 +26,10 @@ module RuleBox
       "#<#{self.class} #{inspection}>"
     end
 
+    def to_h
+      __attributes.keys.map { |key| [key.to_sym, send(key)] }.to_h
+    end
+
     private
 
     def init_data!(args)

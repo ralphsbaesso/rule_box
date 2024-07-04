@@ -36,7 +36,7 @@ module RuleBox
       @output = output_class.new
       @facade = facade_class.new
       @facade.perform self
-      output
+      handle_output
     end
 
     def new_output!(**args)
@@ -69,6 +69,10 @@ module RuleBox
 
     def output_class
       self.class::Output
+    end
+
+    def handle_output
+      output.to_h
     end
 
     class << self
