@@ -8,12 +8,12 @@ RSpec.describe CreateUser::UseCase do
     email = 'john@rule.box.com'
 
     use_case = CreateUser::UseCase.new
-    result = use_case.exec name: name, email: email
+    output = use_case.exec name: name, email: email
 
-    expect(result).to be_a(CreateUser::UseCase::Output)
-    expect(result.status).to eq('success')
+    expect(output).to be_a(Hash)
+    expect(output[:status]).to eq('success')
 
-    user = result.data
+    user = output[:data]
     expect(user).to be_an(User)
     expect(user.name).to eq(name)
     expect(user.email).to eq(email)
@@ -25,11 +25,11 @@ RSpec.describe CreateUser::UseCase do
       email = 'john@rule.box.com'
 
       use_case = CreateUser::UseCase.new
-      result = use_case.exec name: name, email: email
+      output = use_case.exec name: name, email: email
 
-      expect(result).to be_a(CreateUser::UseCase::Output)
-      expect(result.status).to eq('error')
-      expect(result.errors).to eq(["Name can't be empty!"])
+      expect(output).to be_a(Hash)
+      expect(output[:status]).to eq('error')
+      expect(output[:errors]).to eq(["Name can't be empty!"])
     end
 
     it 'must return "Invalid email!"' do
@@ -37,11 +37,11 @@ RSpec.describe CreateUser::UseCase do
       email = 'john@rule_box.com'
 
       use_case = CreateUser::UseCase.new
-      result = use_case.exec name: name, email: email
+      output = use_case.exec name: name, email: email
 
-      expect(result).to be_a(CreateUser::UseCase::Output)
-      expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Invalid email!'])
+      expect(output).to be_a(Hash)
+      expect(output[:status]).to eq('error')
+      expect(output[:errors]).to eq(['Invalid email!'])
     end
 
     it 'must return two error messages' do
@@ -49,11 +49,11 @@ RSpec.describe CreateUser::UseCase do
       email = 'john@rule_box.com'
 
       use_case = CreateUser::UseCase.new
-      result = use_case.exec name: name, email: email
+      output = use_case.exec name: name, email: email
 
-      expect(result).to be_a(CreateUser::UseCase::Output)
-      expect(result.status).to eq('error')
-      expect(result.errors.size).to eq(2)
+      expect(output).to be_a(Hash)
+      expect(output[:status]).to eq('error')
+      expect(output[:errors].size).to eq(2)
     end
   end
 
@@ -64,11 +64,11 @@ RSpec.describe CreateUser::UseCase do
 
       use_case = CreateUser::UseCase.new
       use_case.throw_error = true
-      result = use_case.exec name: name, email: email
+      output = use_case.exec name: name, email: email
 
-      expect(result).to be_a(CreateUser::UseCase::Output)
-      expect(result.status).to eq('error')
-      expect(result.errors).to eq(['Oops, something went wrong!'])
+      expect(output).to be_a(Hash)
+      expect(output[:status]).to eq('error')
+      expect(output[:errors]).to eq(['Oops, something went wrong!'])
     end
   end
 end
