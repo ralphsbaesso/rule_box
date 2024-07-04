@@ -72,8 +72,8 @@ module RuleBox
     end
 
     class << self
-      def add_dependency(name, default: nil, optional: false, **options, &validate)
-        self::Dependency.add_dependency(name, default: default, optional: optional, **options, &validate)
+      def add_dependency(name, **options)
+        self::Dependency.add(name, **options)
       end
 
       def input(name, **options)
@@ -84,8 +84,8 @@ module RuleBox
         names.each { |name| input(name) }
       end
 
-      def output(name, **options, &callback)
-        self::Output.data_accessor name, **options, &callback
+      def output(name, **options)
+        self::Output.data_accessor name, **options
       end
 
       def outputs(*names)
@@ -107,9 +107,9 @@ module RuleBox
 
         class_eval <<~M, __FILE__, __LINE__ + 1
           class ::#{sub}::Dependency < #{self}::Dependency; end
-          ::#{sub}::Dependency.instance_variable_set(:@dependencies, #{self}::Dependency.send(:dependencies).clone)
-          ::#{sub}::Dependency.instance_variable_set(:@validations, #{self}::Dependency.send(:validations).clone)
         M
+        # ::#{sub}::Dependency.instance_variable_set(:@dependencies, #{self}::Dependency.send(:dependencies).clone)
+        # ::#{sub}::Dependency.instance_variable_set(:@validations, #{self}::Dependency.send(:validations).clone)
 
         class_eval <<~M, __FILE__, __LINE__ + 1
           class ::#{sub}::Facade < #{self}::Facade; end

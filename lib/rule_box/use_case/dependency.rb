@@ -2,74 +2,31 @@
 
 module RuleBox
   class UseCase
-    class Dependency
-      def initialize(**args)
-        init_data! args.transform_keys(&:to_s)
-      end
-
-      def schema
-        self.class.schema
+    class Dependency < Data
+      def self.__validate?
+        true
       end
 
       private
 
-      def init_data!(args)
-        errors = []
-
-        schema.each do |key_name, options|
-          value = args[key_name].nil? ? options['default'] : args[key_name]
-          args_key = args.key?(key_name) ? key_name : nil
-          error = check_dependency(key_name, args_key, value)
-          if error
-            errors << error
-          else
-            instance_variable_set("@#{key_name}", value)
+      def validate!
+        validations = self.class.send(:__validations)
+        errors = schema.filter_map do |key_name, options|
+          if !__attributes.key?(key_name)
+            InvalidDependency.new("missing keyword: #{key_name}")
+          elsif validations[key_name]
+            value = __attributes[key_name]
+            validation = validations[key_name]
+            if validation.arity == 1
+              validation.call(value)
+            else
+              validation.call(value, options)
+            end
           end
         end
 
-        raise errors.join("\n") unless errors.empty?
-      end
-
-      def check_dependency(key, args_key, value)
-        options = schema[key]
-        return if options['optional'] && value.nil?
-
-        if !value.nil?
-          validate = self.class.send(:validations)[key]
-          validate&.call(value, options)
-        elsif args_key.nil?
-          "missing keyword: #{key}"
-        end
-      rescue StandardError => e
-        e.message
-      end
-
-      class << self
-        def add_dependency(name, default: nil, optional: false, **options, &validate)
-          name = name.to_s
-          dependencies[name] =
-            if !default.nil?
-              options.transform_keys(&:to_s).merge('default' => default, 'optional' => true)
-            else
-              options.transform_keys(&:to_s).merge('optional' => ![nil, false].include?(optional))
-            end
-          validations[name] = validate if validate
-          attr_accessor name
-        end
-
-        def schema
-          dependencies.clone
-        end
-
-        private
-
-        def dependencies
-          @dependencies ||= {}
-        end
-
-        def validations
-          @validations ||= {}
-        end
+        messages = errors.filter { |e| e.is_a?(InvalidDependency) }.map(&:message)
+        raise InvalidDependency, messages.join("\n") unless messages.empty?
       end
     end
   end

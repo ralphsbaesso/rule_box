@@ -17,3 +17,5 @@ module RuleBox
   extend RuleBox::ExecutionHook
   class Error < StandardError; end
 end
+
+class InvalidDependency < StandardError; end

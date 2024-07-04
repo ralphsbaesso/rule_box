@@ -32,10 +32,16 @@ module RuleBox
       schema.each do |key, options|
         if args.key?(key)
           send("#{key}=", args[key])
-        elsif !options['default'].nil?
+        elsif options.key? 'default'
           send("#{key}=", options['default'].clone)
         end
       end
+
+      validate! if self.class.send(:__validate?)
+    end
+
+    def validate!
+      raise NotImplementedError
     end
 
     def read_attribute(key)
@@ -51,14 +57,22 @@ module RuleBox
     end
 
     class << self
-      def data_accessor(name, default: nil, **options, &callback)
+      def data_accessor(name, **options)
         options = options.transform_keys(&:to_s)
         callback = options.delete('callback') if options['callback'].is_a?(Proc)
+        validate = options.delete('validate') if options['validate'].respond_to?(:call)
+
+        __data[name.to_s] = options
+        __validations[name.to_s] = validate if __validate?
+
         setter = "#{name}="
-        __data[name.to_s] = options.merge('default' => default).compact
         define_method(name) { read_attribute name }
         define_method(setter) { |value| write_attribute(name, callback ? callback.call(value) : value) }
         instance_eval { private setter } if __private_data?
+      end
+
+      def add(name, **options)
+        data_accessor(name, **options)
       end
 
       def schema
@@ -71,8 +85,16 @@ module RuleBox
         true
       end
 
+      def __validate?
+        false
+      end
+
       def __data
         @__data ||= {}
+      end
+
+      def __validations
+        @__validations ||= {}
       end
     end
   end

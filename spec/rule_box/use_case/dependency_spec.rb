@@ -1,20 +1,22 @@
 # frozen_string_literal: true
 
+Validate = proc do |owner|
+  InvalidDependency.new('owner should be a Hash') unless owner.is_a? Hash
+end
+
 class TestDependency < RuleBox::UseCase::Dependency
-  add_dependency :code
-  add_dependency :external, default: false
-  add_dependency :repository, optional: true
-  add_dependency :message, default: 'hello world'
-  add_dependency :owner do |owner|
-    'owner should be a Hash' unless owner.is_a? Hash
-  end
+  add :code
+  add :external, default: false
+  add :repository, default: nil
+  add :message, default: 'hello world'
+  add :owner, validate: Validate
 end
 
 module Code
   class CheckCode < RuleBox::UseCase
-    add_dependency :code do |c|
-      'c deve ser número' unless c.is_a?(Numeric)
-    end
+    add_dependency :code, validate: lambda { |value|
+      InvalidDependency.new('c deve ser número') unless value.is_a?(Numeric)
+    }
   end
 
   class CheckTopCode < CheckCode
@@ -31,11 +33,11 @@ RSpec.describe RuleBox::UseCase::Dependency do
         expect(dependency.schema.keys).to include('code', 'owner')
         expect(dependency.schema)
           .to eq({
-                   'code' => { 'optional' => false },
-                   'external' => { 'default' => false, 'optional' => true },
-                   'message' => { 'default' => 'hello world', 'optional' => true },
-                   'owner' => { 'optional' => false },
-                   'repository' => { 'optional' => true }
+                   'code' => {},
+                   'external' => { 'default' => false },
+                   'message' => { 'default' => 'hello world' },
+                   'owner' => {},
+                   'repository' => { 'default' => nil }
                  })
       end
     end
@@ -52,6 +54,12 @@ RSpec.describe RuleBox::UseCase::Dependency do
     end
 
     context '#check_dependency!' do
+      it 'return InvalidDependency Exception' do
+        expect do
+          TestDependency.new
+        end.to raise_error(InvalidDependency)
+      end
+
       it 'without arguments' do
         expect do
           TestDependency.new
@@ -72,14 +80,6 @@ RSpec.describe RuleBox::UseCase::Dependency do
         expect do
           Code::CheckCode.new
         end.to raise_error(/missing keyword: code/)
-      end
-
-      describe 'with hierarchy' do
-        it 'without arguments' do
-          expect do
-            Code::CheckTopCode.new
-          end.to raise_error(/(missing keyword: code)/)
-        end
       end
     end
   end
