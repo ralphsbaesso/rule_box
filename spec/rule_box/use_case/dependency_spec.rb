@@ -14,13 +14,17 @@ end
 
 module Code
   class CheckCode < RuleBox::UseCase
-    add_dependency :code, validate: lambda { |value|
-      InvalidDependency.new('c deve ser número') unless value.is_a?(Numeric)
-    }
+    dependency do |d|
+      d.add :code, validate: lambda { |value|
+        InvalidDependency.new('c deve ser número') unless value.is_a?(Numeric)
+      }
+    end
   end
 
   class CheckTopCode < CheckCode
-    add_dependency :top_code
+    dependency do |d|
+      d.add :top_code
+    end
   end
 end
 

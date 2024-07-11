@@ -49,9 +49,22 @@ module CreateUser
 
   class ThrowAnyError < StandardError; end
 
+  class Output < RuleBox::UseCase::Output
+    add :data
+    add :status
+    add :errors, default: []
+    def status
+      status = read_attribute :status
+      status&.to_s
+    end
+  end
+
   class UseCase < UseCaseBase
-    inputs :name, :email
-    outputs :data, :status, :errors
+    input do |i|
+      i.add :name
+      i.add :email
+    end
+    output Output
     attr_accessor :throw_error
 
     rules CheckName,
@@ -68,13 +81,6 @@ module CreateUser
 
     def handler_error
       new_output!(status: :error, errors: ['Oops, something went wrong!'])
-    end
-
-    class Output
-      def status
-        status = read_attribute :status
-        status&.to_s
-      end
     end
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class UseCaseAdmin < UseCaseBase
-  add_dependency :admin do |admin|
-    'Must pass Admin instance!' unless admin.is_a? Admin
+  dependency do |d|
+    d.add :admin, validate: ->(admin) { InvalidDependency.new('Must pass Admin instance!') unless admin.is_a? Admin }
   end
 end

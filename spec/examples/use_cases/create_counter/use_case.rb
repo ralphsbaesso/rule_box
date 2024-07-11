@@ -24,8 +24,16 @@ module CreateCounter
   class ThirdStep < StrategyBase; end
 
   class UseCase < UseCaseBase
-    inputs :value, :factor
-    outputs :data, :errors, :meta, :status
+    input do |i|
+      i.add :value
+      i.add :factor
+    end
+    output do |o|
+      o.add :data
+      o.add :errors
+      o.add :meta
+      o.add :status
+    end
     attr_accessor :counter
 
     rules Create,

@@ -29,11 +29,17 @@ module CreateBook
   end
 
   class UseCase < UseCaseBase
-    inputs :name, :code
-    outputs :data, :errors, :status
-
-    add_dependency :user do |value|
-      'Must be an "User"' unless value.is_a? User
+    input do |i|
+      i.add :name
+      i.add :code
+    end
+    output do |o|
+      o.add :data
+      o.add :errors
+      o.add :status
+    end
+    dependency do |d|
+      d.add :user, validate: ->(value) { InvalidDependency.new('Must be an "User"') unless value.is_a? User }
     end
 
     rules CheckCode,

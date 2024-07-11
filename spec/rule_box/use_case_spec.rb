@@ -3,17 +3,22 @@
 Callback = ->(value) { value.to_s }
 class UseCase < RuleBox::UseCase
   desc 'A small use case!'
-  input :name, kind: :string, required: true, callback: Callback
-  input :email, kind: :string
-  input :temper, kind: :string, default: :happy, callback: Callback
-  input :age, kind: :number, required: true
-  output :description, detail: 'a small summary'
+  input do |i|
+    i.add :name, kind: :string, required: true, callback: Callback
+    i.add :email, kind: :string
+    i.add :temper, kind: :string, default: :happy, callback: Callback
+    i.add :age, kind: :number, required: true
+  end
+  output do |o|
+    o.add :description, detail: 'a small summary'
+  end
 end
 
 RSpec.describe RuleBox::UseCase do
   let(:schema) do
     {
       'description' => 'A small use case!',
+      'dependencies' => {},
       'inputs' => {
         'name' => { 'kind' => :string, 'required' => true },
         'email' => { 'kind' => :string },

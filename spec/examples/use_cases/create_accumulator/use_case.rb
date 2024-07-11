@@ -62,8 +62,14 @@ module CreateAccumulator
   end
 
   class UseCase < UseCaseBase
-    inputs :initial_value, :sum, :subtraction, :multiplication, :division
-    outputs :result
+    input do |i|
+      i.add :initial_value
+      i.add :sum
+      i.add :subtraction
+      i.add :multiplication
+      i.add :division
+    end
+    output { |o| o.add :result }
     attr_accessor :accumulator
 
     rules Init, Sum, Subtraction, Multiplication, Division, CreateResult

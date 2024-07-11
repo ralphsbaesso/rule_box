@@ -28,9 +28,12 @@ module CreateHistory
   end
 
   class UseCase < UseCaseAdmin
-    inputs :name
-    outputs :data, :errors
-    output :status, default: :ok, callback: ->(v) { v.to_s }
+    input { |i| i.add :name }
+    output do |o|
+      o.add :status, default: :ok, callback: ->(v) { v.to_s }
+      o.add :data
+      o.add :errors, default: []
+    end
     attr_accessor :history
 
     rules FirstStep,
