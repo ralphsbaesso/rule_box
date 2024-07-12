@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Output < RuleBox::UseCase::Output
+class Output < RuleBox::Output
   data_accessor :status, desc: 'return status', callback: ->(v) { v.to_s }
   data_accessor :messages, default: [], desc: 'return info messages'
   data_accessor :meta, default: {}
@@ -10,7 +10,7 @@ class OutputUseCase < RuleBox::UseCase
   outputs :name, :age, :job
 end
 
-RSpec.describe RuleBox::UseCase::Output do
+RSpec.describe RuleBox::Output do
   it 'must set default data' do
     output = Output.new(status: :success)
     expect(output.status).to eq('success')

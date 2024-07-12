@@ -4,7 +4,7 @@ Validate = proc do |owner|
   InvalidDependency.new('owner should be a Hash') unless owner.is_a? Hash
 end
 
-class TestDependency < RuleBox::UseCase::Dependency
+class TestDependency < RuleBox::Dependency
   add :code
   add :external, default: false
   add :repository, default: nil
@@ -28,7 +28,7 @@ module Code
   end
 end
 
-RSpec.describe RuleBox::UseCase::Dependency do
+RSpec.describe RuleBox::Dependency do
   context 'instance methods' do
     context '#schema' do
       it do

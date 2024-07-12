@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Input < RuleBox::UseCase::Input
+class Input < RuleBox::Input
   data_accessor :status, desc: 'return status', &->(v) { v.to_s }
   data_accessor :messages, default: [], desc: 'return info messages'
   data_accessor :meta, default: {}
@@ -10,7 +10,7 @@ class InputUseCase < RuleBox::UseCase
   inputs :name, :age, :job
 end
 
-RSpec.describe RuleBox::UseCase::Input do
+RSpec.describe RuleBox::Input do
   context 'instance methods' do
     context '#schema' do
       it do

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module RuleBox
-  class UseCase
-    class Input < RuleBox::Data
+  class Output < Data
+    def self.__private_data?
+      false
     end
   end
 end

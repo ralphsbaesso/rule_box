@@ -49,7 +49,7 @@ module CreateUser
 
   class ThrowAnyError < StandardError; end
 
-  class Output < RuleBox::UseCase::Output
+  class Output < RuleBox::Output
     add :data
     add :status
     add :errors, default: []

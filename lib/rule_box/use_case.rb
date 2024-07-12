@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'use_case/input'
-require_relative 'use_case/dependency'
 require_relative 'use_case/facade'
-require_relative 'use_case/output'
 
 module RuleBox
   class UseCase
@@ -18,7 +15,7 @@ module RuleBox
     alias o output
 
     def initialize(**args)
-      @dependencies = build_subclass('Dependency', **args)
+      @dependencies = subclass('Dependency', **args)
     end
 
     def to_s
@@ -32,15 +29,15 @@ module RuleBox
 
     def exec(**args)
       check_executed!
-      @input = build_subclass('Input', **args)
-      @output = build_subclass('Output')
+      @input = subclass('Input', **args)
+      @output = subclass('Output')
       @facade = facade_class.new
       @facade.perform self
       handle_output
     end
 
     def new_output!(**args)
-      @output = build_subclass('Output', **args)
+      @output = subclass('Output', **args)
     end
 
     def schema
@@ -63,13 +60,13 @@ module RuleBox
       output.to_h
     end
 
-    def build_subclass(name, **args)
+    def subclass(name, **args)
       self.class.subclass(name).new(**args)
     end
 
     class << self
       def subclass(name)
-        __resources[name] || (__resources[name] = build_subclass(name))
+        __subclass[name] || (__subclass[name] = build_subclass(name))
       end
 
       def dependencies(*names)
@@ -85,30 +82,21 @@ module RuleBox
       end
 
       def dependency(resource = nil, &block)
-        block ? build_subclass_by_block('Dependency', &block) : build_subclass_by_resource(resource, 'Dependency')
+        build_subclass_by_resource(resource, 'Dependency') if resource
+        build_subclass_by_block('Dependency', &block) if block
         true
       end
 
       def input(resource = nil, &block)
-        block ? build_subclass_by_block('Input', &block) : build_subclass_by_resource(resource, 'Input')
+        build_subclass_by_resource(resource, 'Input') if resource
+        build_subclass_by_block('Input', &block) if block
         true
       end
 
       def output(resource = nil, &block)
-        block ? build_subclass_by_block('Output', &block) : build_subclass_by_resource(resource, 'Output')
+        build_subclass_by_resource(resource, 'Output') if resource
+        build_subclass_by_block('Output', &block) if block
         true
-      end
-
-      def build_subclass_by_block(name, &block)
-        subclass = build_subclass(name)
-        block.call(subclass)
-      end
-
-      def build_subclass_by_resource(resource, subclass_name)
-        raise "resource #{resource} already defined" if __resources[resource]
-
-        check_inheritance!(resource, "RuleBox::UseCase::#{subclass_name}")
-        __resources[subclass_name] = resource
       end
 
       def schema
@@ -122,27 +110,41 @@ module RuleBox
 
       private
 
-      def check_inheritance!(current_resource_class, resource_class)
-        return if current_resource_class.ancestors.map(&:to_s).include? resource_class
+      def build_subclass_by_block(subclass_name, &block)
+        subclass = subclass(subclass_name)
+        block.call(subclass)
+      end
 
-        raise "#{current_resource_class} is not a subclass of #{resource_class}"
+      def build_subclass_by_resource(subclass, subclass_name)
+        raise "resource #{subclass_name} already defined" if __subclass[subclass_name]
+        raise "#{subclass} is not a subclass of #{subclass_name}" unless subclass.ancestors.map(&:to_s).include?("RuleBox::#{subclass_name}")
+
+        build_custom_subclass(subclass, subclass_name)
       end
 
       def build_subclass(resource_name)
-        return const_get(resource_name) if self == ::RuleBox::UseCase
+        return __subclass[resource_name] if __subclass[resource_name]
 
-        subclasses = %w[Dependency Input Output]
-        raise "Resource name \"#{resource_name}\" invalid, expected [#{subclasses.join(' ')}]" unless subclasses.include?(resource_name)
+        unless self == ::RuleBox::UseCase
+          class_eval <<~M, __FILE__, __LINE__ + 1
+            class ::#{self}::#{resource_name} < RuleBox::#{resource_name}; end
+          M
+        end
 
-        class_eval <<~M, __FILE__, __LINE__ + 1
-          class ::#{self}::#{resource_name} < RuleBox::UseCase::#{resource_name}; end
-        M
-
-        const_get(resource_name)
+        __subclass[resource_name] = const_get(resource_name)
       end
 
-      def __resources
-        @__resources ||= {}
+      def build_custom_subclass(subclass, subclass_name)
+        class_eval <<~M, __FILE__, __LINE__ + 1
+          class ::#{self}::#{subclass_name} < #{subclass}; end
+          ::#{self}::#{subclass_name}.instance_variable_set(:@__data, #{subclass}.schema)
+        M
+
+        __subclass[subclass_name] = const_get(subclass_name)
+      end
+
+      def __subclass
+        @__subclass ||= {}
       end
     end
   end
