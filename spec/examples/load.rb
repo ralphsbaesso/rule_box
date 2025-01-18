@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'uri'
+
 require_relative 'models/admin'
 require_relative 'models/book'
 require_relative 'models/counter'

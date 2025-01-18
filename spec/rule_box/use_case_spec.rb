@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-Callback = ->(value) { value.to_s }
+Callback = lambda(&:to_s)
 class UseCase < RuleBox::UseCase
   desc 'A small use case!'
   input do |i|

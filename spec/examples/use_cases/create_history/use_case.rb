@@ -30,7 +30,7 @@ module CreateHistory
   class UseCase < UseCaseAdmin
     input { |i| i.add :name }
     output do |o|
-      o.add :status, default: :ok, callback: ->(v) { v.to_s }
+      o.add :status, default: :ok, callback: lambda(&:to_s)
       o.add :data
       o.add :errors, default: []
     end

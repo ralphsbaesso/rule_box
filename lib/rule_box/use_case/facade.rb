@@ -53,7 +53,7 @@ module RuleBox
         raise "class [#{use_case.class}] without mapped rules!" if class_strategies.empty?
 
         classes = class_strategies.reject { |strategy| strategy < RuleBox::Strategy }
-        return if classes.size.zero?
+        return if classes.empty?
 
         raise "class [#{classes.map(&:name).join(', ')}] must extends RuleBox::Strategy or your subclass."
       end

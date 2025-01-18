@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Output < RuleBox::Output
-  data_accessor :status, desc: 'return status', callback: ->(v) { v.to_s }
+  data_accessor :status, desc: 'return status', callback: lambda(&:to_s)
   data_accessor :messages, default: [], desc: 'return info messages'
   data_accessor :meta, default: {}
 end
